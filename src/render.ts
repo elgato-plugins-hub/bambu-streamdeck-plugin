@@ -70,7 +70,7 @@ function centerLabel(text: string, y: number, size: number, color: string, weigh
 function formatHumidity(val: number | null): string {
 	if (val === null || val === undefined) return "AMS";
 	if (val === 1) return "💧 15%";
-	if (val === 2) return "💧 24%";
+	if (val === 2) return "💧 25%";
 	if (val === 3) return "💧 40%";
 	if (val === 4) return "💧 60%";
 	if (val === 5) return "💧 80%";

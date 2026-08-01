@@ -107,9 +107,11 @@ function parseAms(printObj: Record<string, any>): AmsState | null {
 				remainPercent: remainRaw > 0 ? remainRaw : null,
 			};
 		});
+
+		const humidityVal = u.humidity !== undefined ? Number(u.humidity) : (amsRoot?.humidity !== undefined ? Number(amsRoot.humidity) : null);
 		return {
 			id: u.id !== undefined ? Number(u.id) : -1,
-			humidityPercent: u.humidity !== undefined ? Number(u.humidity) : (amsRoot?.humidity !== undefined ? Number(amsRoot.humidity) : null),
+			humidityPercent: humidityVal !== null && !isNaN(humidityVal) ? humidityVal : null,
 			tempC: u.temp !== undefined ? Number(u.temp) : null,
 			trays,
 		};
@@ -299,7 +301,24 @@ export class BambuCloudService extends EventEmitter {
 				if (!this.cumulativeTelemetry.ams) {
 					this.cumulativeTelemetry.ams = amsParsed;
 				} else {
-					if (amsParsed.units && amsParsed.units.length > 0) this.cumulativeTelemetry.ams.units = amsParsed.units;
+					if (amsParsed.units && amsParsed.units.length > 0) {
+						amsParsed.units.forEach((newUnit, uIdx) => {
+							const existingUnit = this.cumulativeTelemetry.ams!.units[uIdx];
+							if (!existingUnit) {
+								this.cumulativeTelemetry.ams!.units[uIdx] = newUnit;
+							} else {
+								if (newUnit.humidityPercent !== null && newUnit.humidityPercent !== undefined) {
+									existingUnit.humidityPercent = newUnit.humidityPercent;
+								}
+								if (newUnit.tempC !== null && newUnit.tempC !== undefined) {
+									existingUnit.tempC = newUnit.tempC;
+								}
+								if (newUnit.trays && newUnit.trays.length > 0) {
+									existingUnit.trays = newUnit.trays;
+								}
+							}
+						});
+					}
 					if (amsParsed.activeTrayIndex !== null) this.cumulativeTelemetry.ams.activeTrayIndex = amsParsed.activeTrayIndex;
 					if (amsParsed.externalSpool) this.cumulativeTelemetry.ams.externalSpool = amsParsed.externalSpool;
 				}
