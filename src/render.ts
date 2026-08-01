@@ -67,14 +67,20 @@ function centerLabel(text: string, y: number, size: number, color: string, weigh
 		fill="${color}" text-anchor="middle">${esc(text)}</text>`;
 }
 
-function formatHumidity(val: number | null): string {
+function formatHumidity(val: number | null, tempC?: number | null): string {
 	if (val === null || val === undefined) return "AMS";
-	if (val === 1) return "💧 15%";
-	if (val === 2) return "💧 25%";
-	if (val === 3) return "💧 40%";
-	if (val === 4) return "💧 60%";
-	if (val === 5) return "💧 80%";
-	return `💧 ${Math.round(val)}%`;
+	let pctStr = "";
+	if (val === 1) pctStr = "💧 10%";
+	else if (val === 2) pctStr = "💧 18%";
+	else if (val === 3) pctStr = "💧 25%";
+	else if (val === 4) pctStr = "💧 45%";
+	else if (val === 5) pctStr = "💧 70%";
+	else pctStr = `💧 ${Math.round(val)}%`;
+
+	if (tempC !== null && tempC !== undefined && tempC > 0) {
+		return `${pctStr} | ${Math.round(tempC)}°C`;
+	}
+	return pctStr;
 }
 
 // ── Individual Views (Big & Bold for Stream Deck Display) ───────────────────
@@ -195,7 +201,7 @@ export function renderAmsView(t: BambuTelemetry): string {
 	}
 
 	const unit = ams.units?.[0];
-	const humidityText = unit ? formatHumidity(unit.humidityPercent) : "SPOOL";
+	const humidityText = unit ? formatHumidity(unit.humidityPercent, unit.tempC) : "SPOOL";
 	const activeIndex = ams.activeTrayIndex ?? -1;
 
 	const slotWidth = 25;
@@ -229,7 +235,7 @@ export function renderAmsView(t: BambuTelemetry): string {
 	}
 
 	return frame(`
-		${centerLabel(humidityText, 24, 15, MUTED, "800")}
+		${centerLabel(humidityText, 24, 14, MUTED, "800")}
 		${slotsSvg}
 		${centerLabel(statusText, 132, 14, TEXT, "800")}
 	`);
@@ -285,7 +291,7 @@ export function renderFanControlView(t: BambuTelemetry): string {
 	const chamberVal = t.fans?.chamberPercent;
 
 	const partStr = partVal !== null && partVal !== undefined ? `${partVal}%` : "OFF";
-	const auxStr = auxVal !== null && auxVal !== undefined ? `${auxVal}%` : "OFF";
+	const auxStr = auxVal !== null && auxVal !== undefined ? `${auxStr}%` : "OFF";
 	const chamberStr = chamberVal !== null && chamberVal !== undefined ? `${chamberVal}%` : "OFF";
 
 	const isCoolingActive = (partVal ?? 0) > 0 || (auxVal ?? 0) > 0;
