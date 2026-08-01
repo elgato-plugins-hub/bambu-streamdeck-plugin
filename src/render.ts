@@ -73,7 +73,7 @@ function formatDuration(totalMinutes: number | null): string {
 	const hours = Math.floor((totalMinutes % 1440) / 60);
 	const mins = Math.round(totalMinutes % 60);
 
-	if (days > 0) return `${days}d ${hours}h`;
+	if (days > 0) return `${days}d ${hours}h ${mins}m`;
 	if (hours > 0) return `${hours}h ${mins}m`;
 	return `${mins}m`;
 }
@@ -189,14 +189,17 @@ export function renderTimeView(t: BambuTelemetry): string {
 		elapsedMinutes = Math.round((remaining / (100 - pct)) * pct);
 	}
 
-	const remainingText = remaining !== null ? `${formatDuration(remaining)} left` : "-- left";
+	const hasDays = remaining !== null && remaining >= 1440;
+	const remainingText = remaining !== null ? (hasDays ? `${formatDuration(remaining)}` : `${formatDuration(remaining)} left`) : "-- left";
 	const elapsedText = elapsedMinutes !== null ? `${formatDuration(elapsedMinutes)} elap` : "-- elap";
 	const layerText = t.printing && t.totalLayers ? `L${t.layerNum ?? 0}/${t.totalLayers}` : "-- LAYER";
 
+	const remainingSize = hasDays ? 17 : 20;
+
 	return frame(`
 		${centerLabel("TIME", 24, 15, MUTED, "800")}
-		${centerLabel(remainingText, 56, 20, TEXT, "900")}
-		${centerLabel(elapsedText, 86, 16, MUTED, "700")}
+		${centerLabel(remainingText, 56, remainingSize, TEXT, "900")}
+		${centerLabel(elapsedText, 86, 15, MUTED, "700")}
 		${centerLabel(layerText, 126, 17, accent, "800")}
 	`);
 }
