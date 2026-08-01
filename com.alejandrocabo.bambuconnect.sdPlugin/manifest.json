@@ -1,0 +1,226 @@
+{
+	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+	"Name": "Bambu Connect",
+	"Version": "1.0.0.0",
+	"Author": "Alejandro Cabo",
+	"Description": "Live telemetry monitor for Bambu Lab 3D printers (Nozzle, Bed, Chamber, AMS, Progress, Time, Fans, Gcode).",
+	"Category": "Bambu Connect",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"Icon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"SDKVersion": 2,
+	"Software": {
+		"MinimumVersion": "6.4"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "10.15"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "20"
+	},
+	"UUID": "com.alejandrocabo.bambuconnect",
+	"Actions": [
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.print-progress",
+			"Name": "Print Progress",
+			"Tooltip": "Displays current print progress percentage and status ring.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.nozzle-temp",
+			"Name": "Nozzle Temp",
+			"Tooltip": "Displays nozzle current and target temperature.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.bed-temp",
+			"Name": "Heatbed Temp",
+			"Tooltip": "Displays heatbed current and target temperature.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.chamber-temp",
+			"Name": "Chamber Temp",
+			"Tooltip": "Displays internal chamber temperature.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.fan-speed",
+			"Name": "Air & Fan Speeds",
+			"Tooltip": "Displays Part Cooling, Aux Fan, and Chamber Filter Fan speeds.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.subtask-info",
+			"Name": "Active Gcode & Speed",
+			"Tooltip": "Displays active Gcode filename and print speed mode (Silent, Standard, Sport, Ludicrous).",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.ams-status",
+			"Name": "AMS Overview",
+			"Tooltip": "Displays 4 AMS spools, loaded colors, active tray, and humidity.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.ams-slot-1",
+			"Name": "AMS Slot A1",
+			"Tooltip": "Displays spool color and status for AMS Slot A1.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.ams-slot-2",
+			"Name": "AMS Slot A2",
+			"Tooltip": "Displays spool color and status for AMS Slot A2.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.ams-slot-3",
+			"Name": "AMS Slot A3",
+			"Tooltip": "Displays spool color and status for AMS Slot A3.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.ams-slot-4",
+			"Name": "AMS Slot A4",
+			"Tooltip": "Displays spool color and status for AMS Slot A4.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.ams-external",
+			"Name": "External Spool",
+			"Tooltip": "Displays spool color and status for external spool (virtual tray).",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.print-time",
+			"Name": "Print Time and Layers",
+			"Tooltip": "Displays remaining time, elapsed time, and layer progress.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		}
+	]
+}

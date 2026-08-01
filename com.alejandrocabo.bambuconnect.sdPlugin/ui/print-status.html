@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Bambu Connect Configuration</title>
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #d8dce6;
+            background-color: #2d2d2d;
+            margin: 0;
+            padding: 12px;
+            font-size: 12px;
+        }
+
+        .card {
+            background: #232429;
+            border: 1px solid #363942;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #00ae42;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            color: #9da4b4;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            background: #18191c;
+            border: 1px solid #3a3d47;
+            color: #ffffff;
+            padding: 7px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: #00ae42;
+        }
+
+        .btn {
+            background: #00ae42;
+            color: #ffffff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+
+        .btn:hover {
+            background: #008f36;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #3a3d47;
+            margin-top: 6px;
+        }
+
+        .btn-secondary:hover {
+            background: #4a4e5c;
+        }
+
+        .btn-danger {
+            background: #3f1d1d;
+            color: #f87171;
+            border: 1px solid #7f1d1d;
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #5c2828;
+        }
+
+        .status-msg {
+            margin-top: 8px;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            display: none;
+        }
+
+        .status-msg.info {
+            background: #1e3a29;
+            color: #4ade80;
+            border: 1px solid #22543d;
+            display: block;
+        }
+
+        .status-msg.error {
+            background: #3f1d1d;
+            color: #f87171;
+            border: 1px solid #7f1d1d;
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .user-badge {
+            background: #18191c;
+            border: 1px solid #2a2d36;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #4ade80;
+        }
+
+        .toggle-manual {
+            color: #8a92a1;
+            font-size: 11px;
+            text-align: center;
+            margin-top: 10px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .toggle-manual:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- MODE 1: LOGIN FORM (IF NO GLOBAL LOGIN) -->
+    <div id="loginSection" class="card">
+        <div class="card-title">
+            <div class="card-title-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <polyline points="10 17 15 12 10 7"></polyline>
+                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                </svg>
+                Sign In to Bambu Cloud
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="region">Account Region</label>
+            <select id="region">
+                <option value="us">Global / Europe / America (US)</option>
+                <option value="cn">China (CN)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="account">Bambu Lab Account Email</label>
+            <input type="text" id="account" placeholder="user@example.com" autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <!-- 2FA FIELD -->
+        <div id="tfaGroup" class="form-group hidden">
+            <label id="tfaLabel" for="tfaCode">Verification Code</label>
+            <input type="text" id="tfaCode" placeholder="e.g. 123456" />
+        </div>
+
+        <button id="btnLogin" class="btn" type="button">Sign In</button>
+        <div id="statusMsg" class="status-msg"></div>
+    </div>
+
+    <!-- MODE 2: LOGGED IN (PRINTER SELECTION) -->
+    <div id="loggedInSection" class="card hidden">
+        <div class="card-title">
+            <div class="card-title-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Bambu Account Connected
+            </div>
+            <button id="btnLogout" class="btn-danger" type="button">Sign Out</button>
+        </div>
+
+        <div class="user-badge">
+            <span id="userAccountText">user@bambulab.com</span>
+            <span>✓ Globally Connected</span>
+        </div>
+
+        <div class="form-group">
+            <label for="deviceSelect">Select Printer for this Key</label>
+            <select id="deviceSelect">
+                <option value="">Loading printers...</option>
+            </select>
+        </div>
+
+        <button id="btnReloadDevices" class="btn btn-secondary" type="button">🔄 Refresh Printer List</button>
+        <div id="loggedInStatusMsg" class="status-msg"></div>
+    </div>
+
+    <!-- MANUAL / ADVANCED MODE -->
+    <div id="manualSection" class="card hidden">
+        <div class="card-title">
+            ⚙️ Advanced Manual Settings
+        </div>
+        <sdpi-item label="Bambu JWT Token">
+            <sdpi-textfield setting="userToken" type="password" placeholder="Paste JWT token"></sdpi-textfield>
+        </sdpi-item>
+        <sdpi-item label="Serial Number">
+            <sdpi-textfield setting="deviceSerial" placeholder="e.g. 22E00A123456"></sdpi-textfield>
+        </sdpi-item>
+        <sdpi-item label="Region">
+            <sdpi-select setting="region" default="us">
+                <option value="us">US / EU</option>
+                <option value="cn">China</option>
+            </sdpi-select>
+        </sdpi-item>
+    </div>
+
+    <div class="toggle-manual" id="toggleManual">View Advanced Manual Settings</div>
+
+    <script>
+        let websocket = null;
+        let pluginUUID = null;
+        let currentActionInfo = null;
+        let currentSettings = {};
+        let globalSettings = {};
+        let activeLoginState = null;
+
+        const loginSectionEl = document.getElementById("loginSection");
+        const loggedInSectionEl = document.getElementById("loggedInSection");
+        const userAccountTextEl = document.getElementById("userAccountText");
+        const btnLogoutEl = document.getElementById("btnLogout");
+
+        const regionEl = document.getElementById("region");
+        const accountEl = document.getElementById("account");
+        const passwordEl = document.getElementById("password");
+        const tfaGroupEl = document.getElementById("tfaGroup");
+        const tfaLabelEl = document.getElementById("tfaLabel");
+        const tfaCodeEl = document.getElementById("tfaCode");
+        const btnLoginEl = document.getElementById("btnLogin");
+        const statusMsgEl = document.getElementById("statusMsg");
+        const loggedInStatusMsgEl = document.getElementById("loggedInStatusMsg");
+
+        const deviceSelectEl = document.getElementById("deviceSelect");
+        const btnReloadDevicesEl = document.getElementById("btnReloadDevices");
+
+        const manualSectionEl = document.getElementById("manualSection");
+        const toggleManualEl = document.getElementById("toggleManual");
+
+        toggleManualEl.addEventListener("click", () => {
+            manualSectionEl.classList.toggle("hidden");
+        });
+
+        function showStatus(msg, isError = false, targetEl = statusMsgEl) {
+            targetEl.innerText = msg;
+            targetEl.className = "status-msg " + (isError ? "error" : "info");
+        }
+
+        function sendToPlugin(payload) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                const json = {
+                    event: "sendToPlugin",
+                    action: currentActionInfo.action,
+                    context: pluginUUID,
+                    payload: payload
+                };
+                websocket.send(JSON.stringify(json));
+            }
+        }
+
+        function saveSettings(newSettings) {
+            currentSettings = { ...currentSettings, ...newSettings };
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                const json = {
+                    event: "setSettings",
+                    context: pluginUUID,
+                    payload: currentSettings
+                };
+                websocket.send(JSON.stringify(json));
+            }
+        }
+
+        function updateUIState() {
+            const token = currentSettings.userToken || globalSettings.userToken;
+            const email = currentSettings.accountEmail || globalSettings.accountEmail;
+
+            if (token) {
+                loginSectionEl.classList.add("hidden");
+                loggedInSectionEl.classList.remove("hidden");
+                userAccountTextEl.innerText = email || "Bambu Lab Account";
+            } else {
+                loginSectionEl.classList.remove("hidden");
+                loggedInSectionEl.classList.add("hidden");
+            }
+        }
+
+        btnLoginEl.addEventListener("click", () => {
+            const region = regionEl.value;
+            const account = accountEl.value.trim();
+            const password = passwordEl.value;
+            const tfaCode = tfaCodeEl.value.trim();
+
+            if (!account || !password) {
+                showStatus("Please enter your email and password", true);
+                return;
+            }
+
+            btnLoginEl.disabled = true;
+
+            if (activeLoginState) {
+                showStatus("Verifying code...");
+                sendToPlugin({
+                    event: "verifyCode",
+                    region,
+                    account,
+                    code: tfaCode,
+                    loginType: activeLoginState.loginType,
+                    tfaKey: activeLoginState.tfaKey
+                });
+            } else {
+                showStatus("Signing in to Bambu Cloud...");
+                sendToPlugin({
+                    event: "login",
+                    region,
+                    account,
+                    password
+                });
+            }
+        });
+
+        btnLogoutEl.addEventListener("click", () => {
+            currentSettings = {};
+            globalSettings = {};
+            saveSettings({
+                userToken: "",
+                deviceSerial: "",
+                accountEmail: ""
+            });
+            sendToPlugin({ event: "logout" });
+            updateUIState();
+        });
+
+        btnReloadDevicesEl.addEventListener("click", () => {
+            const token = currentSettings.userToken || globalSettings.userToken;
+            if (token) {
+                showStatus("Loading printers...", false, loggedInStatusMsgEl);
+                sendToPlugin({
+                    event: "fetchDevices",
+                    region: globalSettings.region || regionEl.value || "us",
+                    token: token
+                });
+            }
+        });
+
+        deviceSelectEl.addEventListener("change", (e) => {
+            const serial = e.target.value;
+            if (serial) {
+                saveSettings({
+                    deviceSerial: serial
+                });
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    const reqGlobals = {
+                        event: "setGlobalSettings",
+                        context: pluginUUID,
+                        payload: { ...globalSettings, deviceSerial: serial }
+                    };
+                    websocket.send(JSON.stringify(reqGlobals));
+                }
+                showStatus("Printer saved! The key will now update.", false, loggedInStatusMsgEl);
+            }
+        });
+
+        function populateDevices(devices) {
+            deviceSelectEl.innerHTML = "";
+            if (!devices || devices.length === 0) {
+                deviceSelectEl.innerHTML = '<option value="">No printers found in your account</option>';
+                return;
+            }
+
+            const defaultOpt = document.createElement("option");
+            defaultOpt.value = "";
+            defaultOpt.innerText = "-- Select printer for this key --";
+            deviceSelectEl.appendChild(defaultOpt);
+
+            devices.forEach(d => {
+                const opt = document.createElement("option");
+                opt.value = d.dev_id;
+                opt.innerText = `${d.name} (${d.dev_product_name}) - ${d.dev_id}`;
+                const activeSerial = currentSettings.deviceSerial || globalSettings.deviceSerial;
+                if (activeSerial === d.dev_id) {
+                    opt.selected = true;
+                }
+                deviceSelectEl.appendChild(opt);
+            });
+        }
+
+        window.connectElgatoStreamDeckSocket = function(inPort, inPropertyInspectorUUID, inRegisterEvent, inInfo, inActionInfo) {
+            pluginUUID = inPropertyInspectorUUID;
+            currentActionInfo = JSON.parse(inActionInfo);
+            currentSettings = currentActionInfo.payload.settings || {};
+
+            websocket = new WebSocket("ws://127.0.0.1:" + inPort);
+
+            websocket.onopen = function() {
+                const register = {
+                    event: inRegisterEvent,
+                    uuid: inPropertyInspectorUUID
+                };
+                websocket.send(JSON.stringify(register));
+
+                const reqGlobals = {
+                    event: "getGlobalSettings",
+                    context: pluginUUID
+                };
+                websocket.send(JSON.stringify(reqGlobals));
+            };
+
+            websocket.onmessage = function(evt) {
+                const jsonObj = JSON.parse(evt.data);
+                const event = jsonObj.event;
+                const payload = jsonObj.payload;
+
+                if (event === "didReceiveSettings") {
+                    currentSettings = payload.settings || {};
+                    updateUIState();
+                } else if (event === "didReceiveGlobalSettings") {
+                    globalSettings = payload.settings || {};
+                    updateUIState();
+                    const token = currentSettings.userToken || globalSettings.userToken;
+                    if (token) {
+                        sendToPlugin({
+                            event: "fetchDevices",
+                            region: globalSettings.region || "us",
+                            token: token
+                        });
+                    }
+                } else if (event === "sendToPropertyInspector") {
+                    btnLoginEl.disabled = false;
+
+                    if (payload.event === "loginResult") {
+                        if (payload.success) {
+                            activeLoginState = null;
+                            tfaGroupEl.classList.add("hidden");
+                            const firstDevice = payload.devices && payload.devices.length > 0 ? payload.devices[0].dev_id : "";
+                            globalSettings = {
+                                userToken: payload.token,
+                                accountEmail: accountEl.value,
+                                region: regionEl.value,
+                                deviceSerial: firstDevice
+                            };
+                            saveSettings({
+                                deviceSerial: firstDevice
+                            });
+                            updateUIState();
+                            showStatus("Login successful! Select your printer below.", false, loggedInStatusMsgEl);
+                            populateDevices(payload.devices);
+                        } else if (payload.loginType) {
+                            activeLoginState = { loginType: payload.loginType, tfaKey: payload.tfaKey };
+                            tfaGroupEl.classList.remove("hidden");
+                            tfaLabelEl.innerText = payload.loginType === "verifyCode" ? "Code sent to your Email" : "TOTP Code from your App";
+                            btnLoginEl.innerText = "Verify Code";
+                            showStatus(payload.error || "Enter code to continue.", true);
+                        } else {
+                            showStatus(payload.error || "Login error", true);
+                        }
+                    } else if (payload.event === "devicesResult") {
+                        if (payload.success) {
+                            populateDevices(payload.devices);
+                        } else {
+                            showStatus("Error fetching printers: " + payload.error, true, loggedInStatusMsgEl);
+                        }
+                    }
+                }
+            };
+        };
+    </script>
+</body>
+
+</html>

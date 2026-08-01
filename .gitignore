@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+*.jsonl
+debug_mqtt_payload.json
+full_mqtt_snapshot.json
+*.streamDeckPlugin
+.DS_Store
