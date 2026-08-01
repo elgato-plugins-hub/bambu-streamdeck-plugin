@@ -3,21 +3,21 @@ import type { BambuTelemetry, GcodeState } from "./types";
 
 const SIZE = 144;
 
-const BG = "#15171c";
-const RING_TRACK = "#2a2e36";
-const TEXT = "#f2f3f5";
-const MUTED = "#8a92a1";
-export const ERROR_COLOR = "#e0433d";
+const BG = "#111318";
+const RING_TRACK = "#262a33";
+const TEXT = "#ffffff";
+const MUTED = "#a0a7b5";
+export const ERROR_COLOR = "#ff4d4d";
 
 const STATE_COLOR: Record<GcodeState, string> = {
-	RUNNING: "#00ae42",
-	PAUSE: "#f2b134",
-	PREPARE: "#3aa0ff",
-	FINISH: "#00ae42",
-	FAILED: "#e0433d",
-	IDLE: "#5b6472",
-	UNKNOWN: "#5b6472",
-	OTHER: "#5b6472",
+	RUNNING: "#00e65c",
+	PAUSE: "#ffbe3b",
+	PREPARE: "#3ba3ff",
+	FINISH: "#00e65c",
+	FAILED: "#ff4d4d",
+	IDLE: "#788294",
+	UNKNOWN: "#788294",
+	OTHER: "#788294",
 };
 
 const STATE_LABEL: Record<GcodeState, string> = {
@@ -37,18 +37,18 @@ function esc(text: string): string {
 
 function frame(inner: string): string {
 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}">
-		<rect width="${SIZE}" height="${SIZE}" rx="20" fill="${BG}"/>
+		<rect width="${SIZE}" height="${SIZE}" rx="18" fill="${BG}"/>
 		${inner}
 	</svg>`;
 	return `data:image/svg+xml;charset=utf8,${encodeURIComponent(svg)}`;
 }
 
 function progressRing(state: GcodeState, progressPercent: number | null, color: string): string {
-	const r = 38;
+	const r = 40;
 	const cx = 72;
-	const cy = 62;
+	const cy = 64;
 	const circumference = 2 * Math.PI * r;
-	const track = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${RING_TRACK}" stroke-width="8"/>`;
+	const track = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${RING_TRACK}" stroke-width="10"/>`;
 
 	let pct: number | null = null;
 	if (state === "RUNNING" || state === "PAUSE" || state === "PREPARE") pct = progressPercent ?? 0;
@@ -56,14 +56,14 @@ function progressRing(state: GcodeState, progressPercent: number | null, color: 
 	if (pct === null) return track;
 
 	const offset = circumference * (1 - Math.min(100, Math.max(0, pct)) / 100);
-	const arc = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="8"
+	const arc = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="10"
 		stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
 		transform="rotate(-90 ${cx} ${cy})"/>`;
 	return track + arc;
 }
 
-function centerLabel(text: string, y: number, size: number, color: string, weight = "700"): string {
-	return `<text x="72" y="${y}" font-family="Arial, sans-serif" font-size="${size}" font-weight="${weight}"
+function centerLabel(text: string, y: number, size: number, color: string, weight = "800"): string {
+	return `<text x="72" y="${y}" font-family="Arial, Helvetica, sans-serif" font-size="${size}" font-weight="${weight}"
 		fill="${color}" text-anchor="middle">${esc(text)}</text>`;
 }
 
@@ -77,7 +77,7 @@ function formatHumidity(val: number | null): string {
 	return `💧 ${Math.round(val)}%`;
 }
 
-// ── Individual Views (English) ──────────────────────────────────────────────
+// ── Individual Views (Big & Bold for Stream Deck Display) ───────────────────
 
 export function renderNozzleTempView(t: BambuTelemetry): string {
 	const color = STATE_COLOR[t.gcodeState];
@@ -87,24 +87,23 @@ export function renderNozzleTempView(t: BambuTelemetry): string {
 	let statusLabel = `Tgt: ${target}°C`;
 	let statusColor = MUTED;
 	if (target > 0 && current < target - 2) {
-		statusLabel = `🔥 HEATING (${target}°)`;
-		statusColor = "#f2b134";
+		statusLabel = `🔥 HEAT ${target}°`;
+		statusColor = "#ffbe3b";
 	} else if (target === 0 && current > 45) {
-		statusLabel = `❄️ COOLING (${current}°)`;
-		statusColor = "#3aa0ff";
+		statusLabel = `❄️ COOL ${current}°`;
+		statusColor = "#3ba3ff";
 	}
 
 	return frame(`
-		${centerLabel("NOZZLE", 22, 12, MUTED, "600")}
-		<!-- Authentic 3D Printer Hotend Icon -->
+		${centerLabel("NOZZLE", 25, 16, MUTED, "800")}
+		<!-- Clean Hotend Icon -->
 		<g fill="${color}">
-			<rect x="67" y="30" width="10" height="8" rx="1.5"/>
-			<rect x="54" y="38" width="36" height="18" rx="3"/>
-			<polygon points="58,56 86,56 75,72 69,72"/>
-			<line x1="72" y1="72" x2="72" y2="79" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+			<rect x="65" y="32" width="14" height="10" rx="2"/>
+			<polygon points="54,42 90,42 78,58 66,58"/>
+			<line x1="72" y1="58" x2="72" y2="66" stroke="${color}" stroke-width="4" stroke-linecap="round"/>
 		</g>
-		${centerLabel(`${current}°C`, 105, 28, TEXT)}
-		${centerLabel(statusLabel, 130, 11, statusColor, "600")}
+		${centerLabel(`${current}°C`, 104, 34, TEXT, "900")}
+		${centerLabel(statusLabel, 131, 15, statusColor, "800")}
 	`);
 }
 
@@ -116,21 +115,21 @@ export function renderBedTempView(t: BambuTelemetry): string {
 	let statusLabel = `Tgt: ${target}°C`;
 	let statusColor = MUTED;
 	if (target > 0 && current < target - 2) {
-		statusLabel = `🔥 HEATING (${target}°)`;
-		statusColor = "#f2b134";
+		statusLabel = `🔥 HEAT ${target}°`;
+		statusColor = "#ffbe3b";
 	} else if (target === 0 && current > 35) {
-		statusLabel = `❄️ COOLING (${current}°)`;
-		statusColor = "#3aa0ff";
+		statusLabel = `❄️ COOL ${current}°`;
+		statusColor = "#3ba3ff";
 	}
 
 	return frame(`
-		${centerLabel("HEATBED", 22, 12, MUTED, "600")}
-		<rect x="44" y="36" width="56" height="34" rx="4" fill="none" stroke="${color}" stroke-width="4"/>
-		<line x1="44" y1="53" x2="100" y2="53" stroke="${color}" stroke-width="3"/>
-		<line x1="63" y1="36" x2="63" y2="70" stroke="${color}" stroke-width="3"/>
-		<line x1="81" y1="36" x2="81" y2="70" stroke="${color}" stroke-width="3"/>
-		${centerLabel(`${current}°C`, 105, 28, TEXT)}
-		${centerLabel(statusLabel, 130, 11, statusColor, "600")}
+		${centerLabel("HEATBED", 25, 16, MUTED, "800")}
+		<rect x="42" y="34" width="60" height="34" rx="5" fill="none" stroke="${color}" stroke-width="4.5"/>
+		<line x1="42" y1="51" x2="102" y2="51" stroke="${color}" stroke-width="3"/>
+		<line x1="62" y1="34" x2="62" y2="68" stroke="${color}" stroke-width="3"/>
+		<line x1="82" y1="34" x2="82" y2="68" stroke="${color}" stroke-width="3"/>
+		${centerLabel(`${current}°C`, 104, 34, TEXT, "900")}
+		${centerLabel(statusLabel, 131, 15, statusColor, "800")}
 	`);
 }
 
@@ -142,12 +141,11 @@ export function renderChamberTempView(t: BambuTelemetry): string {
 	} else if (t.bedTempC !== null && t.bedTempC !== undefined && t.bedTempC > 0) {
 		tempVal = Math.round(t.bedTempC * 0.7);
 	}
-	const current = `${tempVal}°C`;
 	return frame(`
-		${centerLabel("CHAMBER", 22, 12, MUTED, "600")}
-		<rect x="42" y="34" width="60" height="42" rx="6" fill="none" stroke="${color}" stroke-width="4"/>
-		<path d="M54 55 L72 43 L90 55" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
-		${centerLabel(current, 108, 28, TEXT)}
+		${centerLabel("CHAMBER", 25, 16, MUTED, "800")}
+		<rect x="40" y="36" width="64" height="42" rx="7" fill="none" stroke="${color}" stroke-width="4.5"/>
+		<path d="M52 57 L72 44 L92 57" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round"/>
+		${centerLabel(`${tempVal}°C`, 116, 36, TEXT, "900")}
 	`);
 }
 
@@ -157,10 +155,10 @@ export function renderProgressView(t: BambuTelemetry): string {
 	const ring = progressRing(t.gcodeState, percent, color);
 
 	return frame(`
-		${centerLabel("PROGRESS", 20, 12, MUTED, "600")}
+		${centerLabel("PROGRESS", 23, 15, MUTED, "800")}
 		${ring}
-		${centerLabel(`${percent}%`, 71, 28, TEXT, "800")}
-		${centerLabel(STATE_LABEL[t.gcodeState], 126, 12, color, "600")}
+		${centerLabel(`${percent}%`, 73, 32, TEXT, "900")}
+		${centerLabel(STATE_LABEL[t.gcodeState], 130, 15, color, "800")}
 	`);
 }
 
@@ -175,14 +173,14 @@ export function renderTimeView(t: BambuTelemetry): string {
 	}
 
 	const remainingText = remaining !== null ? `${remaining}m left` : "-- min";
-	const elapsedText = elapsedMinutes !== null ? `${elapsedMinutes}m elap.` : "-- min";
-	const layerText = t.printing && t.totalLayers ? `${t.layerNum ?? 0}/${t.totalLayers}` : "--";
+	const elapsedText = elapsedMinutes !== null ? `${elapsedMinutes}m elap` : "-- min";
+	const layerText = t.printing && t.totalLayers ? `L${t.layerNum ?? 0}/${t.totalLayers}` : "-- LAYER";
 
 	return frame(`
-		${centerLabel("TIME", 18, 11, MUTED, "600")}
-		${centerLabel(remainingText, 48, 17, TEXT, "700")}
-		${centerLabel(elapsedText, 76, 14, MUTED, "600")}
-		${centerLabel(`${layerText} LAYER`, 118, 14, accent, "700")}
+		${centerLabel("TIME", 24, 15, MUTED, "800")}
+		${centerLabel(remainingText, 56, 22, TEXT, "900")}
+		${centerLabel(elapsedText, 86, 16, MUTED, "700")}
+		${centerLabel(layerText, 126, 17, accent, "800")}
 	`);
 }
 
@@ -190,9 +188,9 @@ export function renderAmsView(t: BambuTelemetry): string {
 	const ams = t.ams;
 	if (!ams || (!ams.units || ams.units.length === 0) && !ams.externalSpool) {
 		return frame(`
-			${centerLabel("AMS", 22, 12, MUTED, "600")}
-			<rect x="42" y="38" width="60" height="40" rx="6" fill="none" stroke="${MUTED}" stroke-width="4"/>
-			${centerLabel("No AMS", 108, 16, TEXT)}
+			${centerLabel("AMS", 25, 16, MUTED, "800")}
+			<rect x="40" y="38" width="64" height="40" rx="6" fill="none" stroke="${MUTED}" stroke-width="4"/>
+			${centerLabel("No AMS", 112, 18, TEXT, "800")}
 		`);
 	}
 
@@ -200,40 +198,40 @@ export function renderAmsView(t: BambuTelemetry): string {
 	const humidityText = unit ? formatHumidity(unit.humidityPercent) : "SPOOL";
 	const activeIndex = ams.activeTrayIndex ?? -1;
 
-	const slotWidth = 24;
-	const slotHeight = 44;
-	const startX = 14;
+	const slotWidth = 25;
+	const slotHeight = 46;
+	const startX = 13;
 	const gap = 7;
-	const y = 38;
+	const y = 36;
 
 	const slotsSvg = [0, 1, 2, 3].map((i) => {
 		const x = startX + i * (slotWidth + gap);
 		const tray = unit?.trays.find((tr) => tr.index === i);
 		const color = tray?.color || "#5b6472";
 		const isActive = i === activeIndex;
-		const activeBorder = isActive ? `stroke="#00ae42" stroke-width="3"` : `stroke="#3a3d47" stroke-width="1.5"`;
-		const activeArrow = isActive ? `<polygon points="${x + 6},90 ${x + 18},90 ${x + 12},84" fill="#00ae42"/>` : "";
-		const labelColor = isActive ? "#00ae42" : MUTED;
+		const activeBorder = isActive ? `stroke="#00e65c" stroke-width="3.5"` : `stroke="#383d47" stroke-width="2"`;
+		const activeArrow = isActive ? `<polygon points="${x + 6},92 ${x + 19},92 ${x + 12.5},85" fill="#00e65c"/>` : "";
+		const labelColor = isActive ? "#00e65c" : MUTED;
 
 		return `
-			<rect x="${x}" y="${y}" width="${slotWidth}" height="${slotHeight}" rx="4" fill="${color}" ${activeBorder}/>
+			<rect x="${x}" y="${y}" width="${slotWidth}" height="${slotHeight}" rx="5" fill="${color}" ${activeBorder}/>
 			${activeArrow}
-			<text x="${x + 12}" y="108" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="${labelColor}" text-anchor="middle">A${i + 1}</text>
+			<text x="${x + 12.5}" y="110" font-family="Arial, sans-serif" font-size="14" font-weight="800" fill="${labelColor}" text-anchor="middle">A${i + 1}</text>
 		`;
 	}).join("");
 
 	let statusText = "AMS Standby";
 	if (ams.externalSpoolActive || activeIndex === 254) {
-		statusText = `Use: Ext Spool (${ams.externalSpool?.type || "PLA"})`;
+		statusText = `EXT SPOOL (${ams.externalSpool?.type || "PLA"})`;
 	} else if (activeIndex >= 0 && activeIndex < 4 && unit) {
 		const activeTray = unit.trays.find((tr) => tr.index === activeIndex);
-		statusText = `Use: A${activeIndex + 1} (${activeTray?.type || "PLA"})`;
+		statusText = `A${activeIndex + 1}: ${activeTray?.type || "PLA"}`;
 	}
 
 	return frame(`
-		${centerLabel(humidityText, 22, 12, MUTED, "600")}
+		${centerLabel(humidityText, 24, 15, MUTED, "800")}
 		${slotsSvg}
-		${centerLabel(statusText, 132, 11, TEXT, "600")}
+		${centerLabel(statusText, 132, 14, TEXT, "800")}
 	`);
 }
 
@@ -247,16 +245,16 @@ export function renderAmsSlotView(t: BambuTelemetry, slotIndex: number): string 
 	const color = tray?.color || "#5b6472";
 	const typeName = tray?.present ? (tray.type || "PLA") : "EMPTY";
 
-	const ringColor = isActive ? "#00ae42" : "#3a3d47";
+	const ringColor = isActive ? "#00e65c" : "#383d47";
 	const statusLabel = isActive ? "IN USE" : (tray?.present ? "LOADED" : "EMPTY");
-	const statusColor = isActive ? "#00ae42" : (tray?.present ? TEXT : MUTED);
+	const statusColor = isActive ? "#00e65c" : (tray?.present ? TEXT : MUTED);
 
 	return frame(`
-		${centerLabel(slotName, 22, 12, MUTED, "600")}
-		<circle cx="72" cy="62" r="26" fill="${color}" stroke="${ringColor}" stroke-width="${isActive ? 4 : 2}"/>
-		<circle cx="72" cy="62" r="10" fill="${BG}"/>
-		${centerLabel(typeName, 106, 14, TEXT, "700")}
-		${centerLabel(statusLabel, 126, 11, statusColor, "700")}
+		${centerLabel(slotName, 25, 16, MUTED, "800")}
+		<circle cx="72" cy="64" r="28" fill="${color}" stroke="${ringColor}" stroke-width="${isActive ? 5 : 2.5}"/>
+		<circle cx="72" cy="64" r="11" fill="${BG}"/>
+		${centerLabel(typeName, 110, 17, TEXT, "800")}
+		${centerLabel(statusLabel, 131, 14, statusColor, "800")}
 	`);
 }
 
@@ -268,63 +266,67 @@ export function renderExternalSpoolView(t: BambuTelemetry): string {
 	const color = ext?.color || "#5b6472";
 	const typeName = ext?.present ? (ext.type || "PLA") : "EMPTY";
 
-	const ringColor = isActive ? "#00ae42" : "#3a3d47";
+	const ringColor = isActive ? "#00e65c" : "#383d47";
 	const statusLabel = isActive ? "IN USE" : (ext?.present ? "LOADED" : "EMPTY");
-	const statusColor = isActive ? "#00ae42" : (ext?.present ? TEXT : MUTED);
+	const statusColor = isActive ? "#00e65c" : (ext?.present ? TEXT : MUTED);
 
 	return frame(`
-		${centerLabel("EXT SPOOL", 22, 12, MUTED, "600")}
-		<circle cx="72" cy="62" r="26" fill="${color}" stroke="${ringColor}" stroke-width="${isActive ? 4 : 2}"/>
-		<circle cx="72" cy="62" r="10" fill="${BG}"/>
-		${centerLabel(typeName, 106, 14, TEXT, "700")}
-		${centerLabel(statusLabel, 126, 11, statusColor, "700")}
+		${centerLabel("EXT SPOOL", 25, 16, MUTED, "800")}
+		<circle cx="72" cy="64" r="28" fill="${color}" stroke="${ringColor}" stroke-width="${isActive ? 5 : 2.5}"/>
+		<circle cx="72" cy="64" r="11" fill="${BG}"/>
+		${centerLabel(typeName, 110, 17, TEXT, "800")}
+		${centerLabel(statusLabel, 131, 14, statusColor, "800")}
 	`);
 }
 
 export function renderFanControlView(t: BambuTelemetry): string {
-	const color = STATE_COLOR[t.gcodeState];
-	const part = t.fans?.coolingPercent !== null && t.fans?.coolingPercent !== undefined ? `${t.fans.coolingPercent}%` : "0%";
-	const aux = t.fans?.auxPercent !== null && t.fans?.auxPercent !== undefined ? `${t.fans.auxPercent}%` : "0%";
-	const chamber = t.fans?.chamberPercent !== null && t.fans?.chamberPercent !== undefined ? `${t.fans.chamberPercent}%` : "0%";
+	const partVal = t.fans?.coolingPercent;
+	const auxVal = t.fans?.auxPercent;
+	const chamberVal = t.fans?.chamberPercent;
 
-	const isCoolingActive = (t.fans?.coolingPercent ?? 0) > 0 || (t.fans?.auxPercent ?? 0) > 0;
-	const thermalMode = isCoolingActive ? "COOLING ❄️" : "IDLE 💤";
-	const thermalColor = isCoolingActive ? "#3aa0ff" : MUTED;
+	const partStr = partVal !== null && partVal !== undefined ? `${partVal}%` : "OFF";
+	const auxStr = auxVal !== null && auxVal !== undefined ? `${auxVal}%` : "OFF";
+	const chamberStr = chamberVal !== null && chamberVal !== undefined ? `${chamberVal}%` : "OFF";
+
+	const isCoolingActive = (partVal ?? 0) > 0 || (auxVal ?? 0) > 0;
+	const modeLabel = isCoolingActive ? "COOLING ❄️" : "FAN IDLE 💤";
+	const modeColor = isCoolingActive ? "#3ba3ff" : MUTED;
 
 	return frame(`
-		${centerLabel("AIR & FANS", 20, 11, MUTED, "600")}
-		${centerLabel(`Part: ${part} | Aux: ${aux}`, 50, 12, TEXT, "700")}
-		${centerLabel(`Chamber Fan: ${chamber}`, 76, 11, MUTED, "600")}
-		${centerLabel(thermalMode, 122, 13, thermalColor, "700")}
+		${centerLabel("FANS & AIR", 24, 15, MUTED, "800")}
+		${centerLabel(`PART: ${partStr}`, 52, 17, TEXT, "900")}
+		${centerLabel(`AUX: ${auxStr}`, 76, 17, TEXT, "900")}
+		${centerLabel(`ROOM: ${chamberStr}`, 100, 15, MUTED, "800")}
+		${centerLabel(modeLabel, 128, 14, modeColor, "800")}
 	`);
 }
 
 export function renderSubtaskView(t: BambuTelemetry): string {
 	const color = STATE_COLOR[t.gcodeState];
-	const rawName = t.subtaskName || "No Print Job";
+	const rawName = t.subtaskName || "No Job";
 	const cleanName = rawName.replace(/\.gcode$/i, "").replace(/\.3mf$/i, "");
-	const truncated = cleanName.length > 13 ? cleanName.slice(0, 11) + ".." : cleanName;
+	const truncated = cleanName.length > 10 ? cleanName.slice(0, 8) + ".." : cleanName;
 
-	let speedLabel = "Standard (100%)";
-	if (t.speedLevel === 1) speedLabel = "Silent (50%)";
-	else if (t.speedLevel === 2) speedLabel = "Standard (100%)";
-	else if (t.speedLevel === 3) speedLabel = "Sport (124%)";
-	else if (t.speedLevel === 4) speedLabel = "Ludicrous (166%)";
+	let speedLabel = "STD 100%";
+	if (t.speedLevel === 1) speedLabel = "SILENT 50%";
+	else if (t.speedLevel === 2) speedLabel = "STD 100%";
+	else if (t.speedLevel === 3) speedLabel = "SPORT 124%";
+	else if (t.speedLevel === 4) speedLabel = "LUDICROUS";
 
 	return frame(`
-		${centerLabel("CURRENT GCODE", 20, 11, MUTED, "600")}
-		<rect x="18" y="38" width="108" height="44" rx="6" fill="#23262d" stroke="#3a3d47" stroke-width="1.5"/>
-		${centerLabel(truncated, 64, 12, TEXT, "700")}
-		${centerLabel(speedLabel, 118, 12, color, "700")}
+		${centerLabel("JOB INFO", 24, 15, MUTED, "800")}
+		<rect x="12" y="36" width="120" height="48" rx="8" fill="#1d212a" stroke="#383d47" stroke-width="2"/>
+		${centerLabel(truncated, 67, 18, TEXT, "900")}
+		${centerLabel(speedLabel, 126, 16, color, "900")}
 	`);
 }
 
 export function renderPlaceholder(message: string, color: string = MUTED): string {
 	const lines = message.split("\n");
-	const startY = lines.length > 1 ? 96 : 110;
-	const labels = lines.map((line, i) => centerLabel(line, startY + i * 20, 15, TEXT)).join("");
+	const startY = lines.length > 1 ? 90 : 105;
+	const labels = lines.map((line, i) => centerLabel(line, startY + i * 22, 17, TEXT, "800")).join("");
 	return frame(`
-		<circle cx="72" cy="60" r="6" fill="${color}"/>
+		<circle cx="72" cy="54" r="8" fill="${color}"/>
 		${labels}
 	`);
 }
