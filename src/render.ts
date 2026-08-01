@@ -67,6 +67,17 @@ function centerLabel(text: string, y: number, size: number, color: string, weigh
 		fill="${color}" text-anchor="middle">${esc(text)}</text>`;
 }
 
+function formatDuration(totalMinutes: number | null): string {
+	if (totalMinutes === null || totalMinutes === undefined || totalMinutes < 0) return "--";
+	const days = Math.floor(totalMinutes / 1440);
+	const hours = Math.floor((totalMinutes % 1440) / 60);
+	const mins = Math.round(totalMinutes % 60);
+
+	if (days > 0) return `${days}d ${hours}h`;
+	if (hours > 0) return `${hours}h ${mins}m`;
+	return `${mins}m`;
+}
+
 function formatHumidity(val: number | null, tempC?: number | null): string {
 	if (val === null || val === undefined) return "AMS";
 	let pctStr = "";
@@ -178,13 +189,13 @@ export function renderTimeView(t: BambuTelemetry): string {
 		elapsedMinutes = Math.round((remaining / (100 - pct)) * pct);
 	}
 
-	const remainingText = remaining !== null ? `${remaining}m left` : "-- min";
-	const elapsedText = elapsedMinutes !== null ? `${elapsedMinutes}m elap` : "-- min";
+	const remainingText = remaining !== null ? `${formatDuration(remaining)} left` : "-- left";
+	const elapsedText = elapsedMinutes !== null ? `${formatDuration(elapsedMinutes)} elap` : "-- elap";
 	const layerText = t.printing && t.totalLayers ? `L${t.layerNum ?? 0}/${t.totalLayers}` : "-- LAYER";
 
 	return frame(`
 		${centerLabel("TIME", 24, 15, MUTED, "800")}
-		${centerLabel(remainingText, 56, 22, TEXT, "900")}
+		${centerLabel(remainingText, 56, 20, TEXT, "900")}
 		${centerLabel(elapsedText, 86, 16, MUTED, "700")}
 		${centerLabel(layerText, 126, 17, accent, "800")}
 	`);
