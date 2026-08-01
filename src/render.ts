@@ -291,7 +291,7 @@ export function renderFanControlView(t: BambuTelemetry): string {
 	const chamberVal = t.fans?.chamberPercent;
 
 	const partStr = partVal !== null && partVal !== undefined ? `${partVal}%` : "OFF";
-	const auxStr = auxVal !== null && auxVal !== undefined ? `${auxStr}%` : "OFF";
+	const auxStr = auxVal !== null && auxVal !== undefined ? `${auxVal}%` : "OFF";
 	const chamberStr = chamberVal !== null && chamberVal !== undefined ? `${chamberVal}%` : "OFF";
 
 	const isCoolingActive = (partVal ?? 0) > 0 || (auxVal ?? 0) > 0;
