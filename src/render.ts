@@ -192,7 +192,7 @@ export function renderTimeView(t: BambuTelemetry): string {
 	const hasDays = remaining !== null && remaining >= 1440;
 	const remainingText = remaining !== null ? (hasDays ? `${formatDuration(remaining)}` : `${formatDuration(remaining)} left`) : "-- left";
 	const elapsedText = elapsedMinutes !== null ? `${formatDuration(elapsedMinutes)} elap` : "-- elap";
-	const layerText = t.printing && t.totalLayers ? `L${t.layerNum ?? 0}/${t.totalLayers}` : "-- LAYER";
+	const layerText = t.printing && t.totalLayers ? `L ${t.layerNum ?? 0} / ${t.totalLayers}` : "-- LAYER";
 
 	const remainingSize = hasDays ? 17 : 20;
 
@@ -200,7 +200,7 @@ export function renderTimeView(t: BambuTelemetry): string {
 		${centerLabel("TIME", 24, 15, MUTED, "800")}
 		${centerLabel(remainingText, 56, remainingSize, TEXT, "900")}
 		${centerLabel(elapsedText, 86, 15, MUTED, "700")}
-		${centerLabel(layerText, 126, 17, accent, "800")}
+		${centerLabel(layerText, 126, 16, accent, "800")}
 	`);
 }
 
