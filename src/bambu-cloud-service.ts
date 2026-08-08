@@ -1,8 +1,6 @@
 import mqtt, { MqttClient } from "mqtt";
 import { EventEmitter } from "node:events";
 import { randomBytes } from "node:crypto";
-import * as fs from "node:fs";
-import * as path from "node:path";
 import {
 	AmsState,
 	AmsTray,

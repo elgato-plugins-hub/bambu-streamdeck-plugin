@@ -303,21 +303,19 @@ export function renderFanControlView(t: BambuTelemetry): string {
 	const partVal = t.fans?.coolingPercent;
 	const auxVal = t.fans?.auxPercent;
 	const chamberVal = t.fans?.chamberPercent;
+	const heatbreakVal = t.fans?.heatbreakPercent;
 
 	const partStr = partVal !== null && partVal !== undefined ? `${partVal}%` : "OFF";
 	const auxStr = auxVal !== null && auxVal !== undefined ? `${auxVal}%` : "OFF";
 	const chamberStr = chamberVal !== null && chamberVal !== undefined ? `${chamberVal}%` : "OFF";
-
-	const isCoolingActive = (partVal ?? 0) > 0 || (auxVal ?? 0) > 0;
-	const modeLabel = isCoolingActive ? "COOLING ❄️" : "FAN IDLE 💤";
-	const modeColor = isCoolingActive ? "#3ba3ff" : MUTED;
+	const heatbreakStr = heatbreakVal !== null && heatbreakVal !== undefined ? `${heatbreakVal}%` : "OFF";
 
 	return frame(`
-		${centerLabel("FANS & AIR", 24, 15, MUTED, "800")}
-		${centerLabel(`PART: ${partStr}`, 52, 17, TEXT, "900")}
-		${centerLabel(`AUX: ${auxStr}`, 76, 17, TEXT, "900")}
-		${centerLabel(`ROOM: ${chamberStr}`, 100, 15, MUTED, "800")}
-		${centerLabel(modeLabel, 128, 14, modeColor, "800")}
+		${centerLabel("FANS & AIR", 22, 14, MUTED, "800")}
+		${centerLabel(`PART: ${partStr}`, 48, 16, TEXT, "900")}
+		${centerLabel(`AUX: ${auxStr}`, 70, 16, TEXT, "900")}
+		${centerLabel(`ROOM: ${chamberStr}`, 92, 16, TEXT, "900")}
+		${centerLabel(`HOTEND: ${heatbreakStr}`, 118, 15, MUTED, "800")}
 	`);
 }
 
