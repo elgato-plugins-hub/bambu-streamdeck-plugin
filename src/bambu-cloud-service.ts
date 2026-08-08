@@ -283,26 +283,6 @@ export class BambuCloudService extends EventEmitter {
 			if (print.big_fan2_speed !== undefined) this.cumulativeTelemetry.fans.chamberPercent = fanPercent(print.big_fan2_speed);
 			if (print.heatbreak_fan_speed !== undefined) this.cumulativeTelemetry.fans.heatbreakPercent = fanPercent(print.heatbreak_fan_speed);
 
-			const rawChamber =
-				print.chamber_temper ??
-				print.mc_temper ??
-				print.chamber_temp ??
-				print.chamber_temperature ??
-				print.box_temper ??
-				print.box_temp ??
-				print.ctc?.info?.temp ??
-				print.ctc?.temp;
-
-			if (rawChamber !== undefined && rawChamber !== null) {
-				const strVal = String(rawChamber).trim();
-				if (strVal !== "" && strVal !== "null" && strVal !== "undefined") {
-					const parsed = parseFloat(strVal);
-					if (!isNaN(parsed) && parsed > 0) {
-						this.cumulativeTelemetry.chamberTempC = Math.round(parsed);
-					}
-				}
-			}
-
 			const amsParsed = parseAms(print);
 			if (amsParsed) {
 				if (!this.cumulativeTelemetry.ams) {
@@ -328,6 +308,27 @@ export class BambuCloudService extends EventEmitter {
 					}
 					if (amsParsed.activeTrayIndex !== null) this.cumulativeTelemetry.ams.activeTrayIndex = amsParsed.activeTrayIndex;
 					if (amsParsed.externalSpool) this.cumulativeTelemetry.ams.externalSpool = amsParsed.externalSpool;
+				}
+			}
+
+			const rawChamber =
+				print.chamber_temper ??
+				print.mc_temper ??
+				print.chamber_temp ??
+				print.chamber_temperature ??
+				print.box_temper ??
+				print.box_temp ??
+				print.ctc?.info?.temp ??
+				print.ctc?.temp ??
+				this.cumulativeTelemetry.ams?.units?.[0]?.tempC;
+
+			if (rawChamber !== undefined && rawChamber !== null) {
+				const strVal = String(rawChamber).trim();
+				if (strVal !== "" && strVal !== "null" && strVal !== "undefined") {
+					const parsed = parseFloat(strVal);
+					if (!isNaN(parsed) && parsed > 0) {
+						this.cumulativeTelemetry.chamberTempC = Math.round(parsed);
+					}
 				}
 			}
 
