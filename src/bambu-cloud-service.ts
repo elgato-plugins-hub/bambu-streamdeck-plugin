@@ -283,13 +283,22 @@ export class BambuCloudService extends EventEmitter {
 			if (print.big_fan2_speed !== undefined) this.cumulativeTelemetry.fans.chamberPercent = fanPercent(print.big_fan2_speed);
 			if (print.heatbreak_fan_speed !== undefined) this.cumulativeTelemetry.fans.heatbreakPercent = fanPercent(print.heatbreak_fan_speed);
 
-			const rawChamber = print.chamber_temper ?? print.mc_temper ?? print.chamber_temp ?? print.chamber_temperature ?? print.box_temper ?? print.box_temp ?? print.ctc?.info?.temp ?? print.ctc?.temp;
+			const rawChamber =
+				print.chamber_temper ??
+				print.mc_temper ??
+				print.chamber_temp ??
+				print.chamber_temperature ??
+				print.box_temper ??
+				print.box_temp ??
+				print.ctc?.info?.temp ??
+				print.ctc?.temp;
+
 			if (rawChamber !== undefined && rawChamber !== null) {
 				const strVal = String(rawChamber).trim();
-				if (strVal !== "" && strVal !== "0" && strVal !== "null" && strVal !== "undefined") {
-					const parsed = parseInt(strVal, 10);
+				if (strVal !== "" && strVal !== "null" && strVal !== "undefined") {
+					const parsed = parseFloat(strVal);
 					if (!isNaN(parsed) && parsed > 0) {
-						this.cumulativeTelemetry.chamberTempC = parsed;
+						this.cumulativeTelemetry.chamberTempC = Math.round(parsed);
 					}
 				}
 			}

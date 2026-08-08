@@ -152,17 +152,14 @@ export function renderBedTempView(t: BambuTelemetry): string {
 
 export function renderChamberTempView(t: BambuTelemetry): string {
 	const color = STATE_COLOR[t.gcodeState];
-	let tempVal: number = 42;
-	if (t.chamberTempC !== null && t.chamberTempC !== undefined && t.chamberTempC > 0) {
-		tempVal = Math.round(t.chamberTempC);
-	} else if (t.bedTempC !== null && t.bedTempC !== undefined && t.bedTempC > 0) {
-		tempVal = Math.round(t.bedTempC * 0.7);
-	}
+	const tempVal = t.chamberTempC !== null && t.chamberTempC !== undefined && t.chamberTempC > 0 ? Math.round(t.chamberTempC) : null;
+	const tempText = tempVal !== null ? `${tempVal}°C` : "--°C";
+
 	return frame(`
 		${centerLabel("CHAMBER", 25, 16, MUTED, "800")}
 		<rect x="40" y="36" width="64" height="42" rx="7" fill="none" stroke="${color}" stroke-width="4.5"/>
 		<path d="M52 57 L72 44 L92 57" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round"/>
-		${centerLabel(`${tempVal}°C`, 116, 36, TEXT, "900")}
+		${centerLabel(tempText, 116, 36, TEXT, "900")}
 	`);
 }
 
