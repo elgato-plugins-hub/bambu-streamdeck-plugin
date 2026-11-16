@@ -36,6 +36,8 @@
 | **AMS Slot A1–A4** | Individual spool color, material, and `IN USE` status. |
 | **External Spool** | Rear external spool filament color and active state. |
 | **Print Time & Layers** | Remaining time, elapsed time, and layer count (`X/Y`). |
+| **Light Toggle** | Printer light state (`ON` / `OFF`). Press to switch the light on or off. |
+| **Camera** | Live thumbnail from the printer camera (LAN). Press to save a full-resolution snapshot. |
 
 ---
 
@@ -44,6 +46,17 @@
 1. Download the latest `.streamDeckPlugin` release from the [Releases](https://github.com/Alejandrokbo/bambu-streamdeck-plugin/releases) section.
 2. Double-click `com.alejandrocabo.bambuconnect.streamDeckPlugin` to install it into Elgato Stream Deck.
 3. Open Stream Deck and drag any action from the **Bambu Connect** category onto your key grid.
+
+---
+
+## 🖥️ Supported Platforms
+
+| Platform | Status |
+| :--- | :--- |
+| **Windows 10+** | Supported and tested, including the Camera action. |
+| **macOS 10.15+** | Declared in the plugin manifest but **not tested**. The cloud-based keys (telemetry and Light Toggle) use no platform-specific code and are expected to work. |
+
+**Camera on macOS:** the bundled `ffmpeg` is built for the platform that builds the plugin, so the packaged plugin currently contains the Windows binary only. On a Mac, install `ffmpeg` yourself (for example `brew install ffmpeg`) and set the key's **ffmpeg Path** (typically `/opt/homebrew/bin/ffmpeg` on Apple Silicon or `/usr/local/bin/ffmpeg` on Intel). The camera also needs access to your local network, and macOS may ask you to allow it. This is untested.
 
 ---
 
@@ -68,6 +81,21 @@ Details of failed requests are written to the plugin log (`com.alejandrocabo.bam
 
 ---
 
+## 📷 Camera
+
+The **Camera** action shows a live thumbnail from the printer's built-in camera and saves a snapshot when pressed. Unlike the other keys it does not use Bambu Cloud: it connects directly to the printer over your local network, so the printer and computer must be on the same network.
+
+1. On the printer, enable **LAN Mode Liveview** (Settings > General) and note the **IP address** and **LAN access code** shown on its screen.
+2. Add the **Camera** action to a key and enter the IP address and access code in the Property Inspector.
+3. The key starts showing the live view (about 3 frames per second by default). Press it to save a full-resolution JPEG to the snapshot folder (default `Pictures/Bambu Camera`).
+
+Notes:
+- Video is decoded by `ffmpeg`, which is bundled with the plugin. To use your own build, set **ffmpeg Path** on the key.
+- The stream uses RTSPS on port 322 with the printer's self-signed certificate, as supported by X1, H2 and X2 series printers. Printers that use the older port-6000 camera protocol (P1P, P1S, A1) are not supported yet.
+- The access code is stored in the key's settings and is never written to the plugin log.
+
+---
+
 ## 🌍 Languages
 
 Messages follow the Stream Deck app language. English, Spanish (`es`), German (`de`) and French (`fr`) are included, and any other language falls back to English. To add a language, create `<lang>.json` in the plugin folder (copy `es.json` as a template: keep the English keys and translate the values) and add the same language to `com.alejandrocabo.bambuconnect.sdPlugin/ui/i18n.js`. Text drawn on the key faces is not yet localized.
@@ -84,7 +112,7 @@ cd bambu-streamdeck-plugin
 # Install dependencies
 npm install
 
-# Build Rollup bundle
+# Build Rollup bundle (also copies the bundled ffmpeg into the plugin folder)
 npm run build
 
 # Validate plugin schema
@@ -94,8 +122,12 @@ npx streamdeck validate com.alejandrocabo.bambuconnect.sdPlugin
 npx streamdeck pack com.alejandrocabo.bambuconnect.sdPlugin --force
 ```
 
+The build copies the `ffmpeg` binary that `ffmpeg-static` installs for the **current** platform into `com.alejandrocabo.bambuconnect.sdPlugin/bin/ffmpeg/` (it is git-ignored, about 80 MB). Build and pack on each platform you want to ship.
+
 ---
 
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for details.
+
+The Camera action bundles `ffmpeg` through [`ffmpeg-static`](https://github.com/eugeneware/ffmpeg-static). The downloaded builds are GPL-licensed, so distributing a plugin package that includes them carries FFmpeg's license obligations (see [ffmpeg.org/legal.html](https://ffmpeg.org/legal.html)).

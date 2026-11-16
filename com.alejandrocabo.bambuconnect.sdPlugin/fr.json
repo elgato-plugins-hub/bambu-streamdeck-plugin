@@ -52,6 +52,14 @@
 		{
 			"Name": "Durée et couches d'impression",
 			"Tooltip": "Affiche le temps restant, le temps écoulé et la progression des couches."
+		},
+		{
+			"Name": "Caméra",
+			"Tooltip": "Affiche une vignette en direct de la caméra de l'imprimante (LAN). Appuyez pour enregistrer une capture."
+		},
+		{
+			"Name": "Lumière imprimante",
+			"Tooltip": "Affiche l'état de la lumière de l'imprimante. Appuyez pour l'allumer ou l'éteindre."
 		}
 	],
 	"Localization": {

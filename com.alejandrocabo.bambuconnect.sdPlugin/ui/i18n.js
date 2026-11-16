@@ -60,7 +60,18 @@
 		"Verify Code": "Verificar código",
 		"Enter code to continue.": "Introduce el código para continuar.",
 		"Login error": "Error al iniciar sesión",
-		"Could not fetch the printer list ({0}). Enter your printer serial below instead.": "No se pudo obtener la lista de impresoras ({0}). Introduce abajo el número de serie de tu impresora."
+		"Could not fetch the printer list ({0}). Enter your printer serial below instead.": "No se pudo obtener la lista de impresoras ({0}). Introduce abajo el número de serie de tu impresora.",
+		"Printer IP Address": "Dirección IP de la impresora",
+		"e.g. 192.168.1.50": "p. ej. 192.168.1.50",
+		"LAN Access Code": "Código de acceso LAN",
+		"8 characters": "8 caracteres",
+		"Frame Rate": "Fotogramas por segundo",
+		"Snapshot Folder": "Carpeta de capturas",
+		"Default: Pictures/Bambu Camera": "Por defecto: Imágenes/Bambu Camera",
+		"ffmpeg Path (optional)": "Ruta de ffmpeg (opcional)",
+		"Uses the bundled ffmpeg by default": "Usa el ffmpeg incluido por defecto",
+		"Camera setup help": "Ayuda para configurar la cámara",
+		"Enable LAN Mode Liveview on the printer (Settings > General) and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. Press the key to save a snapshot.": "Activa la vista en directo en modo LAN en la impresora (Ajustes > General) y usa la dirección IP y el código de acceso que muestra su pantalla. La impresora y este equipo deben estar en la misma red. Pulsa la tecla para guardar una captura."
 	},
 	"de": {
 		"Incorrect username or password": "Benutzername oder Passwort falsch",
@@ -121,7 +132,18 @@
 		"Verify Code": "Code bestätigen",
 		"Enter code to continue.": "Gib den Code ein, um fortzufahren.",
 		"Login error": "Anmeldefehler",
-		"Could not fetch the printer list ({0}). Enter your printer serial below instead.": "Die Druckerliste konnte nicht abgerufen werden ({0}). Gib stattdessen unten die Seriennummer deines Druckers ein."
+		"Could not fetch the printer list ({0}). Enter your printer serial below instead.": "Die Druckerliste konnte nicht abgerufen werden ({0}). Gib stattdessen unten die Seriennummer deines Druckers ein.",
+		"Printer IP Address": "IP-Adresse des Druckers",
+		"e.g. 192.168.1.50": "z. B. 192.168.1.50",
+		"LAN Access Code": "LAN-Zugangscode",
+		"8 characters": "8 Zeichen",
+		"Frame Rate": "Bildrate",
+		"Snapshot Folder": "Ordner für Schnappschüsse",
+		"Default: Pictures/Bambu Camera": "Standard: Bilder/Bambu Camera",
+		"ffmpeg Path (optional)": "ffmpeg-Pfad (optional)",
+		"Uses the bundled ffmpeg by default": "Verwendet standardmäßig das mitgelieferte ffmpeg",
+		"Camera setup help": "Hilfe zur Kameraeinrichtung",
+		"Enable LAN Mode Liveview on the printer (Settings > General) and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. Press the key to save a snapshot.": "Aktiviere auf dem Drucker die LAN-Modus-Liveansicht (Einstellungen > Allgemein) und verwende die IP-Adresse und den Zugangscode von seinem Display. Drucker und Computer müssen im selben Netzwerk sein. Drücke die Taste, um einen Schnappschuss zu speichern."
 	},
 	"fr": {
 		"Incorrect username or password": "Identifiant ou mot de passe incorrect",
@@ -182,7 +204,18 @@
 		"Verify Code": "Vérifier le code",
 		"Enter code to continue.": "Saisissez le code pour continuer.",
 		"Login error": "Erreur de connexion",
-		"Could not fetch the printer list ({0}). Enter your printer serial below instead.": "Impossible de récupérer la liste des imprimantes ({0}). Saisissez plutôt le numéro de série ci-dessous."
+		"Could not fetch the printer list ({0}). Enter your printer serial below instead.": "Impossible de récupérer la liste des imprimantes ({0}). Saisissez plutôt le numéro de série ci-dessous.",
+		"Printer IP Address": "Adresse IP de l'imprimante",
+		"e.g. 192.168.1.50": "p. ex. 192.168.1.50",
+		"LAN Access Code": "Code d'accès LAN",
+		"8 characters": "8 caractères",
+		"Frame Rate": "Fréquence d'images",
+		"Snapshot Folder": "Dossier des captures",
+		"Default: Pictures/Bambu Camera": "Par défaut : Images/Bambu Camera",
+		"ffmpeg Path (optional)": "Chemin de ffmpeg (facultatif)",
+		"Uses the bundled ffmpeg by default": "Utilise par défaut le ffmpeg fourni",
+		"Camera setup help": "Aide pour la configuration de la caméra",
+		"Enable LAN Mode Liveview on the printer (Settings > General) and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. Press the key to save a snapshot.": "Activez la vue en direct en mode LAN sur l'imprimante (Paramètres > Général) et utilisez l'adresse IP et le code d'accès affichés sur son écran. L'imprimante et cet ordinateur doivent être sur le même réseau. Appuyez sur la touche pour enregistrer une capture."
 	}
 };
 	let table = {};
