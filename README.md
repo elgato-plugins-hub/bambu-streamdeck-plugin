@@ -1,17 +1,17 @@
 # 🖨️ Bambu Connect — Elgato Stream Deck Plugin
 
 [![Stream Deck](https://img.shields.io/badge/Stream%20Deck-v6.4+-00AE42?style=for-the-badge&logo=elgato&logoColor=white)](https://marketplace.elgato.com)
-[![Bambu Lab](https://img.shields.io/badge/Bambu%20Lab-P1P%20%7C%20P1S%20%7C%20X1C%20%7C%20A1%20%7C%20P2S-00AE42?style=for-the-badge)](https://bambulab.com)
+[![Bambu Lab](https://img.shields.io/badge/Bambu%20Lab-P1P%20%7C%20P1S%20%7C%20X1C%20%7C%20A1%20%7C%20P2S%20%7C%20X2D-00AE42?style=for-the-badge)](https://bambulab.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-**Bambu Connect** is a feature-rich, live telemetry monitor plugin for **Elgato Stream Deck**. It connects directly to **Bambu Lab Cloud MQTT** service to provide real-time updates on nozzle temperature, heatbed, chamber ambient, AMS spools, fan speeds, active Gcode jobs, and print progress right at your fingertips.
+**Bambu Connect** is a feature-rich, live telemetry monitor plugin for **Elgato Stream Deck**. It connects directly to **Bambu Lab Cloud MQTT** service to provide real-time updates on nozzle temperature, heatbed, chamber ambient, AMS spools, fan speeds, active Gcode jobs, and print progress right at your fingertips. The **Light Toggle** sends commands over the same connection, and the **Camera** connects directly to your printer over your local network.
 
 ---
 
 ## ✨ Features
 
-- **🔥 Nozzle & Heatbed Telemetry**: Live temperatures with dynamic `HEATING 🔥` and `COOLING ❄️` status indicators.
-- **🌡️ Chamber Temperature**: Real-time enclosure ambient monitoring (supports Bambu Lab P1/P2/X1/A1 series).
+- **🔥 Nozzle & Heatbed Telemetry**: Live temperatures with dynamic `HEATING 🔥` and `COOLING ❄️` status indicators. Dual-nozzle printers (H2D, X2D) show both nozzles, left and right, with the active one outlined.
+- **🌡️ Chamber Temperature**: Real-time enclosure ambient monitoring (supports Bambu Lab P1/P2/X1/X2/A1 series).
 - **🎨 AMS Overview & Slots (A1–A4)**: Individual spool keys displaying exact Loaded Filament Hex Colors, Types (PLA, PETG, TPU...), humidity level (`24%`), and active `IN USE` badge.
 - **🧵 External Spool Support**: Dedicated key for the external spool, including the second spool on dual-nozzle printers.
 - **🔢 Multiple AMS Units**: Show any AMS unit (A–D) or AMS HT, with the active spool followed per nozzle on dual-nozzle printers.
@@ -19,6 +19,8 @@
 - **📑 Active Gcode & Print Speed**: Displays active Gcode job filename and print speed mode (`Silent 50%`, `Standard 100%`, `Sport 124%`, `Ludicrous 166%`).
 - **⏳ Print Time & Layer Counter**: Remaining time, elapsed time, and current/total layers (`X/Y LAYER`).
 - **📊 Print Progress Ring**: Dynamic percentage arc and state indicator (`PRINTING`, `PAUSED`, `FINISHED`).
+- **💡 Light Toggle**: See whether the printer light is on and switch it on or off with one press.
+- **📷 Live Camera**: A live thumbnail from the printer's camera over your local network, with a press-to-save full-resolution snapshot (needs `ffmpeg`).
 - **🔑 One-Click Bambu Cloud Sign-In**: Easy authentication via Property Inspector with 2FA/TOTP support and automatic global printer detection.
 
 ---
@@ -44,7 +46,7 @@
 
 ## 🚀 Installation
 
-1. Download the latest `.streamDeckPlugin` release from the [Releases](https://github.com/Alejandrokbo/bambu-streamdeck-plugin/releases) section.
+1. Download the latest `.streamDeckPlugin` release from the [Releases](https://github.com/elgato-plugins-hub/bambu-streamdeck-plugin/releases) section.
 2. Double-click `com.alejandrocabo.bambuconnect.streamDeckPlugin` to install it into Elgato Stream Deck.
 3. Open Stream Deck and drag any action from the **Bambu Connect** category onto your key grid.
 
@@ -76,7 +78,7 @@ The plugin finds `ffmpeg` automatically in the standard install locations (winge
 2. In the Property Inspector below, enter your **Bambu Lab Account Email** and **Password**.
 3. If 2FA is enabled, enter your verification code.
 4. Select your printer (`KBO-P2S`, `X1C`, `P1S`, `A1`...) from the dropdown menu.
-5. All other keys will automatically connect to your selected printer!
+5. All other cloud-based keys connect to your selected printer automatically. The AMS keys have an **AMS Unit** (or **External Spool**) option in the Property Inspector, and the **Camera** key is set up separately (see [Camera](#-camera)).
 
 ### If your printer is not listed
 
@@ -101,8 +103,27 @@ The **Camera** action shows a live thumbnail from the printer's built-in camera 
 
 Notes:
 - Video is decoded by `ffmpeg`, which you install yourself (see [Installation](#-installation)). The plugin tries the key's **ffmpeg Path**, then a bundled copy if the plugin was built with one, then the standard system locations, then your `PATH`, and checks that the one it picks can actually run.
-- The stream uses RTSPS on port 322 with the printer's self-signed certificate, as supported by X1, H2 and X2 series printers. Printers that use the older port-6000 camera protocol (P1P, P1S, A1) are not supported yet.
+- The stream uses RTSPS on port 322 with the printer's self-signed certificate. Other Bambu integrations use this stream for X1, H2 and X2 series printers, and it has been verified here on an X2D. Printers that use the older port-6000 camera protocol (P1P, P1S, A1) are not supported yet.
 - The access code is stored in the key's settings and is never written to the plugin log.
+
+---
+
+## 🩺 Troubleshooting
+
+Key faces show a short message when something needs attention:
+
+| Message | Meaning and what to do |
+| :--- | :--- |
+| `Sign In Required` | No Bambu Cloud sign-in yet. Open the key's Property Inspector and sign in. |
+| `Select Printer` | Signed in but no printer chosen. Pick one in the list, or enter the serial manually (see [If your printer is not listed](#if-your-printer-is-not-listed)). |
+| `Connecting...` | Connecting to the printer. This normally clears within a few seconds. |
+| `Token Error` | The plugin could not resolve your Bambu user ID from the sign-in token. Enter the user ID manually (see above) and check the plugin log. |
+| `Connection Error` | The connection to Bambu Cloud failed or was rejected. Sign in again and check the plugin log. |
+| `No Data` | Connected but nothing received yet. Press the key to request an update. |
+| `Camera Setup` | The Camera key has no valid printer IP address or LAN access code. |
+| `Camera Error` | The printer's camera stream could not be reached or stalled. Check that LAN Only Liveview is on, the printer is on the same network, and the access code is right. The plugin retries automatically. |
+| `ffmpeg Missing` | `ffmpeg` was not found or is blocked from running. See the prerequisite under [Installation](#-installation). |
+| `NO UNIT` / `NO SLOT` | An AMS key points at a unit or slot the printer does not report (for example a second slot on an AMS HT). Change the key's **AMS Unit**. |
 
 ---
 
@@ -116,7 +137,7 @@ Messages follow the Stream Deck app language. English, Spanish (`es`), German (`
 
 ```bash
 # Clone the repository
-git clone https://github.com/Alejandrokbo/bambu-streamdeck-plugin.git
+git clone https://github.com/elgato-plugins-hub/bambu-streamdeck-plugin.git
 cd bambu-streamdeck-plugin
 
 # Install dependencies
