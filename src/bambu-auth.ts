@@ -1,3 +1,5 @@
+import os from "node:os";
+
 import streamDeck from "@elgato/streamdeck";
 
 import type { CloudRegion } from "./types";
@@ -15,6 +17,18 @@ const BROWSER_HEADERS = {
 	Referer: `${WEB_ORIGIN}/`,
 };
 
+/** Operating system name in the form the Bambu slicer reports it. */
+function osType(): string {
+	switch (process.platform) {
+		case "win32":
+			return "windows";
+		case "darwin":
+			return "macos";
+		default:
+			return "linux";
+	}
+}
+
 const SLICER_HEADERS = {
 	"Content-Type": "application/json",
 	"User-Agent": "bambu_network_agent/01.09.05.01",
@@ -24,8 +38,8 @@ const SLICER_HEADERS = {
 	"Accept-Language": "en-US,en;q=0.9",
 	"X-BBL-Client-Version": "01.09.05.01",
 	"X-BBL-Language": "en-US",
-	"X-BBL-OS-Type": "windows",
-	"X-BBL-OS-Version": "10.0",
+	"X-BBL-OS-Type": osType(),
+	"X-BBL-OS-Version": os.release(),
 	"X-BBL-Device-ID": "streamdeck-bambu-plugin",
 	"X-BBL-Agent-Version": "01.09.05.01",
 };

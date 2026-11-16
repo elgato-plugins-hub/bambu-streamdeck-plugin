@@ -27,6 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   instead of relying on the login request to send it.
 
 ### Changed
+- The client headers sent to the Bambu API now report the real operating system and version instead of a
+  hardcoded Windows value.
+- README documents supported platforms: Windows is tested; macOS is declared in the manifest but untested, and the
+  Camera action needs a system `ffmpeg` there.
 - Status messages, errors and debug logs that were hardcoded in Spanish are now English by default and
   translated through the new localization layer.
 - A failed printer-list request is no longer swallowed after sign-in; the error is logged and the Property

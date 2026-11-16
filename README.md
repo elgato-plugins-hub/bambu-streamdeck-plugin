@@ -49,6 +49,17 @@
 
 ---
 
+## 🖥️ Supported Platforms
+
+| Platform | Status |
+| :--- | :--- |
+| **Windows 10+** | Supported and tested, including the Camera action. |
+| **macOS 10.15+** | Declared in the plugin manifest but **not tested**. The cloud-based keys (telemetry and Light Toggle) use no platform-specific code and are expected to work. |
+
+**Camera on macOS:** the bundled `ffmpeg` is built for the platform that builds the plugin, so the packaged plugin currently contains the Windows binary only. On a Mac, install `ffmpeg` yourself (for example `brew install ffmpeg`) and set the key's **ffmpeg Path** (typically `/opt/homebrew/bin/ffmpeg` on Apple Silicon or `/usr/local/bin/ffmpeg` on Intel). The camera also needs access to your local network, and macOS may ask you to allow it. This is untested.
+
+---
+
 ## ⚙️ Configuration
 
 1. Click on any **Bambu Connect** key in Stream Deck.
