@@ -28,10 +28,13 @@ export interface AmsTray {
 }
 
 export interface AmsUnit {
+  /** 0-3 for regular AMS / AMS Lite units, 128 and up for AMS HT units. */
   id: number;
   humidityPercent: number | null;
   tempC: number | null;
   trays: AmsTray[];
+  /** Nozzle this unit feeds on dual-nozzle printers; null when unknown or not applicable. */
+  nozzle: NozzleSide | null;
 }
 
 export interface ExternalSpool {
@@ -40,13 +43,18 @@ export interface ExternalSpool {
   color: string | null;
 }
 
+/** The filament currently feeding the active nozzle: a slot of an AMS unit, or an external spool. */
+export type ActiveFilament =
+  | { kind: 'ams'; unitId: number; slot: number }
+  | { kind: 'external'; index: number };
+
 export interface AmsState {
   present: boolean;
   units: AmsUnit[];
-  /** Indice de bandeja activa (unitIndex * traysPerUnit + trayId), null si no hay ninguna. */
-  activeTrayIndex: number | null;
-  externalSpoolActive: boolean;
-  externalSpool: ExternalSpool | null;
+  /** Filament in use right now, or null when nothing is loaded. */
+  active: ActiveFilament | null;
+  /** External spool holders: index 0 is the first (single-spool printers only have this one), index 1 the second. */
+  externalSpools: Array<ExternalSpool | null>;
 }
 
 export interface FanState {

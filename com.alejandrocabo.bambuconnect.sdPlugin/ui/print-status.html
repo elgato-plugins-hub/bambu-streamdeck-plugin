@@ -171,6 +171,31 @@
 
 <body>
 
+    <!-- AMS OPTIONS (only for the AMS slot, overview and external spool keys) -->
+    <div id="amsOptions" class="card hidden">
+        <div id="amsUnitGroup" class="form-group hidden">
+            <label for="amsUnitSelect" data-i18n="AMS Unit">AMS Unit</label>
+            <select id="amsUnitSelect">
+                <option value="0">AMS A</option>
+                <option value="1">AMS B</option>
+                <option value="2">AMS C</option>
+                <option value="3">AMS D</option>
+                <option value="128">AMS HT 1</option>
+                <option value="129">AMS HT 2</option>
+                <option value="130">AMS HT 3</option>
+                <option value="131">AMS HT 4</option>
+            </select>
+        </div>
+        <div id="externalGroup" class="form-group hidden">
+            <label for="externalSelect" data-i18n="External Spool">External Spool</label>
+            <select id="externalSelect">
+                <option value="0" data-i18n="Spool 1">Spool 1</option>
+                <option value="1" data-i18n="Spool 2">Spool 2</option>
+            </select>
+        </div>
+        <div id="overviewHint" class="status-msg info hidden" data-i18n="Press the key to switch between AMS units.">Press the key to switch between AMS units.</div>
+    </div>
+
     <!-- MODE 1: LOGIN FORM (IF NO GLOBAL LOGIN) -->
     <div id="loginSection" class="card">
         <div class="card-title">
@@ -338,7 +363,31 @@
             }
         }
 
+        const amsOptionsEl = document.getElementById("amsOptions");
+        const amsUnitGroupEl = document.getElementById("amsUnitGroup");
+        const amsUnitSelectEl = document.getElementById("amsUnitSelect");
+        const externalGroupEl = document.getElementById("externalGroup");
+        const externalSelectEl = document.getElementById("externalSelect");
+        const overviewHintEl = document.getElementById("overviewHint");
+
+        function updateAmsOptions() {
+            const action = (currentActionInfo && currentActionInfo.action) || "";
+            const isSlot = /\.ams-slot-\d$/.test(action);
+            const isExternal = /\.ams-external$/.test(action);
+            const isOverview = /\.ams-status$/.test(action);
+            amsOptionsEl.classList.toggle("hidden", !(isSlot || isExternal || isOverview));
+            amsUnitGroupEl.classList.toggle("hidden", !isSlot);
+            externalGroupEl.classList.toggle("hidden", !isExternal);
+            overviewHintEl.classList.toggle("hidden", !isOverview);
+            amsUnitSelectEl.value = String(currentSettings.amsUnit || "0");
+            externalSelectEl.value = String(currentSettings.externalIndex || "0");
+        }
+
+        amsUnitSelectEl.addEventListener("change", (e) => saveSettings({ amsUnit: e.target.value }));
+        externalSelectEl.addEventListener("change", (e) => saveSettings({ externalIndex: e.target.value }));
+
         function updateUIState() {
+            updateAmsOptions();
             const token = currentSettings.userToken || globalSettings.userToken;
             const email = currentSettings.accountEmail || globalSettings.accountEmail;
 

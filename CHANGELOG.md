@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Multiple AMS units.** The AMS Slot keys have an "AMS Unit" option (A-D, or AMS HT 1-4), and the AMS Overview key
+  shows one unit at a time and switches to the next unit when pressed. Units are tracked by id, so incremental
+  printer updates no longer drop other units, and a partial tray update (for example only `remain`) no longer blanks
+  a loaded slot. On dual-nozzle printers the overview marks which nozzle (`L`/`R`) the unit feeds.
+- **Active spool per nozzle.** The in-use spool is read from each nozzle's `snow` value, so it is correct for any AMS
+  unit (previously only unit A could show as active), and an unloaded filament now clears the highlight instead of
+  keeping the last value.
+- **Second external spool.** The External Spool key has a "Spool 1 / Spool 2" option for dual-nozzle printers, which
+  report both (`vir_slot`).
 - **Dual-nozzle support on the Nozzle Temp key.** Printers that report more than one extruder (H2D, X2D) now show
   both nozzles, left and right, with their current and target temperatures and the active nozzle outlined. The
   plugin reads the per-nozzle data in `device.extruder` instead of the single `nozzle_temper` field, which on these

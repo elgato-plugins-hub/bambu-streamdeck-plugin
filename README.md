@@ -13,7 +13,8 @@
 - **🔥 Nozzle & Heatbed Telemetry**: Live temperatures with dynamic `HEATING 🔥` and `COOLING ❄️` status indicators.
 - **🌡️ Chamber Temperature**: Real-time enclosure ambient monitoring (supports Bambu Lab P1/P2/X1/A1 series).
 - **🎨 AMS Overview & Slots (A1–A4)**: Individual spool keys displaying exact Loaded Filament Hex Colors, Types (PLA, PETG, TPU...), humidity level (`24%`), and active `IN USE` badge.
-- **🧵 External Spool Support**: Dedicated key for rear virtual tray / external spool.
+- **🧵 External Spool Support**: Dedicated key for the external spool, including the second spool on dual-nozzle printers.
+- **🔢 Multiple AMS Units**: Show any AMS unit (A–D) or AMS HT, with the active spool followed per nozzle on dual-nozzle printers.
 - **🌬️ Air & Fan Speed Control**: Real-time Part Cooling, Auxiliary Fan, and Chamber Exhaust Filter Fan monitoring (`0–100%`).
 - **📑 Active Gcode & Print Speed**: Displays active Gcode job filename and print speed mode (`Silent 50%`, `Standard 100%`, `Sport 124%`, `Ludicrous 166%`).
 - **⏳ Print Time & Layer Counter**: Remaining time, elapsed time, and current/total layers (`X/Y LAYER`).
@@ -32,9 +33,9 @@
 | **Chamber Temp** | Internal chamber ambient temperature. |
 | **Air & Fan Speeds** | Part, Aux, and Chamber filter fan speeds (`0–100%`). |
 | **Active Gcode & Speed** | Active Gcode filename and print speed mode. |
-| **AMS Overview** | All 4 spools, active slot, and humidity percentage (`24%`). |
-| **AMS Slot A1–A4** | Individual spool color, material, and `IN USE` status. |
-| **External Spool** | Rear external spool filament color and active state. |
+| **AMS Overview** | The 4 spools of one AMS unit, the filament in use, and humidity (`24%`). Press the key to switch between units (A, B, C, D, HT). |
+| **AMS Slot A1–A4** | Individual spool color, material, and `IN USE` status. Choose which AMS unit (A–D or HT 1–4) the key shows in the Property Inspector. |
+| **External Spool** | External spool filament color and active state. On dual-nozzle printers choose spool 1 or 2 in the Property Inspector. |
 | **Print Time & Layers** | Remaining time, elapsed time, and layer count (`X/Y`). |
 | **Light Toggle** | Printer light state (`ON` / `OFF`). Press to switch the light on or off. |
 | **Camera** | Live thumbnail from the printer camera (LAN). Press to save a full-resolution snapshot. |
