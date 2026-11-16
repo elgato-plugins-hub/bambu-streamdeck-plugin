@@ -66,7 +66,7 @@ The plugin finds `ffmpeg` automatically in the standard install locations (winge
 | **Windows 10+** | Supported and tested, including the Camera action (requires `ffmpeg`). |
 | **macOS 10.15+** | Declared in the plugin manifest but **not tested**. The cloud-based keys (telemetry and Light Toggle) use no platform-specific code and are expected to work. |
 
-**Camera on macOS:** requires `ffmpeg` (see the prerequisite under [Installation](#-installation)). The key shows `ffmpeg Missing` if no working `ffmpeg` is found, and the plugin log says whether it is missing or blocked from running. The camera also needs access to your local network, and macOS may ask you to allow it. This is untested.
+**Camera on macOS:** requires `ffmpeg` (see the prerequisite under [Installation](#-installation)), which the plugin finds automatically in the standard Homebrew locations; if yours is elsewhere, set **ffmpeg Path** on the key. The key shows `ffmpeg Missing` if no working `ffmpeg` is found, and the plugin log says whether it is missing or blocked from running. The camera also needs access to your local network, and macOS may ask you to allow it. This is untested.
 
 ---
 
