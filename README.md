@@ -69,16 +69,6 @@ The plugin finds `ffmpeg` automatically in the standard install locations (winge
 
 ---
 
-## 🖥️ Supported Platforms
-
-| Platform | Status |
-| :--- | :--- |
-| **Windows 10+** | Supported and tested. |
-| **macOS 10.15+** | Declared in the plugin manifest but **not tested**. The cloud-based keys (telemetry and Light Toggle) use no platform-specific code and are expected to work. |
-
-
----
-
 ## ⚙️ Configuration
 
 1. Click on any **Bambu Connect** key in Stream Deck.
