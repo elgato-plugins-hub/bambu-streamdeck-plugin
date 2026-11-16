@@ -1,4 +1,4 @@
-// Genera imágenes SVG en formato Data URI para las acciones del Stream Deck.
+// Generates SVG data-URI images for the Stream Deck actions.
 import type { BambuTelemetry, GcodeState } from "./types";
 
 const SIZE = 144;

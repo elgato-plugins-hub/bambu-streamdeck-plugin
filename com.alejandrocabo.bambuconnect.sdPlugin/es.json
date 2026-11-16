@@ -1,0 +1,76 @@
+{
+	"Description": "Telemetría en vivo de impresoras 3D Bambu Lab (boquilla, cama, cámara, AMS, progreso, tiempo, ventiladores, Gcode).",
+	"Actions": [
+		{
+			"Name": "Progreso de impresión",
+			"Tooltip": "Muestra el porcentaje de progreso de la impresión y el anillo de estado."
+		},
+		{
+			"Name": "Temp. de la boquilla",
+			"Tooltip": "Muestra la temperatura actual y objetivo de la boquilla."
+		},
+		{
+			"Name": "Temp. de la cama",
+			"Tooltip": "Muestra la temperatura actual y objetivo de la cama caliente."
+		},
+		{
+			"Name": "Temp. de la cámara",
+			"Tooltip": "Muestra la temperatura interior de la cámara."
+		},
+		{
+			"Name": "Velocidades de aire y ventiladores",
+			"Tooltip": "Muestra las velocidades del ventilador de pieza, auxiliar y del filtro de cámara."
+		},
+		{
+			"Name": "Gcode activo y velocidad",
+			"Tooltip": "Muestra el nombre del Gcode activo y el modo de velocidad (Silencioso, Estándar, Sport, Ludicrous)."
+		},
+		{
+			"Name": "Resumen del AMS",
+			"Tooltip": "Muestra las 4 bobinas del AMS, los colores cargados, la bandeja activa y la humedad."
+		},
+		{
+			"Name": "Ranura A1 del AMS",
+			"Tooltip": "Muestra el color y el estado de la bobina de la ranura A1 del AMS."
+		},
+		{
+			"Name": "Ranura A2 del AMS",
+			"Tooltip": "Muestra el color y el estado de la bobina de la ranura A2 del AMS."
+		},
+		{
+			"Name": "Ranura A3 del AMS",
+			"Tooltip": "Muestra el color y el estado de la bobina de la ranura A3 del AMS."
+		},
+		{
+			"Name": "Ranura A4 del AMS",
+			"Tooltip": "Muestra el color y el estado de la bobina de la ranura A4 del AMS."
+		},
+		{
+			"Name": "Bobina externa",
+			"Tooltip": "Muestra el color y el estado de la bobina externa (bandeja virtual)."
+		},
+		{
+			"Name": "Tiempo y capas de impresión",
+			"Tooltip": "Muestra el tiempo restante, el tiempo transcurrido y el progreso de capas."
+		}
+	],
+	"Localization": {
+		"Incorrect username or password": "Usuario o contraseña incorrectos",
+		"HTTP error {0}": "Error HTTP {0}",
+		"A verification code sent by email is required": "Se requiere el código enviado por correo electrónico",
+		"A TOTP code from your authenticator app is required": "Se requiere un código TOTP de tu aplicación de autenticación",
+		"Could not obtain an access token.": "No se pudo obtener el token de acceso.",
+		"Could not obtain the CSRF token": "No se pudo obtener el token CSRF",
+		"Verification code is incorrect or has expired.": "El código de verificación es incorrecto o ha caducado.",
+		"Login failed (HTTP {0}); the response was not JSON. See the plugin log.": "Error al iniciar sesión (HTTP {0}); la respuesta no era JSON. Consulta el registro del plugin.",
+		"Logged in, but printer list failed or was empty; see plugin log.": "Sesión iniciada, pero la lista de impresoras falló o estaba vacía; consulta el registro del plugin.",
+		"Bambu Printer": "Impresora Bambu",
+		"No saved session token": "No hay token de sesión guardado",
+		"Sign In\nRequired": "Inicia\nsesión",
+		"Select\nPrinter": "Elige\nimpresora",
+		"Connecting...": "Conectando...",
+		"Connection\nError": "Error de\nconexión",
+		"Token\nError": "Error de\ntoken",
+		"No Data": "Sin datos"
+	}
+}

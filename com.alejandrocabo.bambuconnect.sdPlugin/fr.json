@@ -1,0 +1,76 @@
+{
+	"Description": "Télémétrie en direct pour les imprimantes 3D Bambu Lab (buse, plateau, enceinte, AMS, progression, durée, ventilateurs, Gcode).",
+	"Actions": [
+		{
+			"Name": "Progression de l'impression",
+			"Tooltip": "Affiche le pourcentage de progression de l'impression et l'anneau d'état."
+		},
+		{
+			"Name": "Température de la buse",
+			"Tooltip": "Affiche la température actuelle et cible de la buse."
+		},
+		{
+			"Name": "Température du plateau",
+			"Tooltip": "Affiche la température actuelle et cible du plateau chauffant."
+		},
+		{
+			"Name": "Température de l'enceinte",
+			"Tooltip": "Affiche la température interne de l'enceinte."
+		},
+		{
+			"Name": "Vitesses d'air et ventilateurs",
+			"Tooltip": "Affiche les vitesses du ventilateur de pièce, auxiliaire et du filtre de l'enceinte."
+		},
+		{
+			"Name": "Gcode actif et vitesse",
+			"Tooltip": "Affiche le nom du Gcode actif et le mode de vitesse (Silencieux, Standard, Sport, Ludicrous)."
+		},
+		{
+			"Name": "Aperçu AMS",
+			"Tooltip": "Affiche les 4 bobines de l'AMS, les couleurs chargées, le bac actif et l'humidité."
+		},
+		{
+			"Name": "Emplacement AMS A1",
+			"Tooltip": "Affiche la couleur et l'état de la bobine de l'emplacement AMS A1."
+		},
+		{
+			"Name": "Emplacement AMS A2",
+			"Tooltip": "Affiche la couleur et l'état de la bobine de l'emplacement AMS A2."
+		},
+		{
+			"Name": "Emplacement AMS A3",
+			"Tooltip": "Affiche la couleur et l'état de la bobine de l'emplacement AMS A3."
+		},
+		{
+			"Name": "Emplacement AMS A4",
+			"Tooltip": "Affiche la couleur et l'état de la bobine de l'emplacement AMS A4."
+		},
+		{
+			"Name": "Bobine externe",
+			"Tooltip": "Affiche la couleur et l'état de la bobine externe (bac virtuel)."
+		},
+		{
+			"Name": "Durée et couches d'impression",
+			"Tooltip": "Affiche le temps restant, le temps écoulé et la progression des couches."
+		}
+	],
+	"Localization": {
+		"Incorrect username or password": "Identifiant ou mot de passe incorrect",
+		"HTTP error {0}": "Erreur HTTP {0}",
+		"A verification code sent by email is required": "Un code de vérification envoyé par e-mail est requis",
+		"A TOTP code from your authenticator app is required": "Un code TOTP de votre application d'authentification est requis",
+		"Could not obtain an access token.": "Impossible d'obtenir le jeton d'accès.",
+		"Could not obtain the CSRF token": "Impossible d'obtenir le jeton CSRF",
+		"Verification code is incorrect or has expired.": "Le code de vérification est incorrect ou a expiré.",
+		"Login failed (HTTP {0}); the response was not JSON. See the plugin log.": "Échec de la connexion (HTTP {0}) ; la réponse n'était pas du JSON. Consultez le journal du plugin.",
+		"Logged in, but printer list failed or was empty; see plugin log.": "Connecté, mais la liste des imprimantes a échoué ou est vide ; consultez le journal du plugin.",
+		"Bambu Printer": "Imprimante Bambu",
+		"No saved session token": "Aucun jeton de session enregistré",
+		"Sign In\nRequired": "Connexion\nrequise",
+		"Select\nPrinter": "Choisir\nimprimante",
+		"Connecting...": "Connexion...",
+		"Connection\nError": "Erreur de\nconnexion",
+		"Token\nError": "Erreur\nde jeton",
+		"No Data": "Aucune\ndonnée"
+	}
+}
