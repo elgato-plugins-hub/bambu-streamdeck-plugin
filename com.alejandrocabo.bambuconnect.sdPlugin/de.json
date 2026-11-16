@@ -1,0 +1,87 @@
+{
+	"Description": "Live-Telemetrie für Bambu-Lab-3D-Drucker (Düse, Heizbett, Kammer, AMS, Fortschritt, Zeit, Lüfter, Gcode).",
+	"Actions": [
+		{
+			"Name": "Druckfortschritt",
+			"Tooltip": "Zeigt den aktuellen Druckfortschritt in Prozent und den Statusring an."
+		},
+		{
+			"Name": "Düsentemperatur",
+			"Tooltip": "Zeigt die aktuelle und die Zieltemperatur der Düse an."
+		},
+		{
+			"Name": "Heizbett-Temperatur",
+			"Tooltip": "Zeigt die aktuelle und die Zieltemperatur des Heizbetts an."
+		},
+		{
+			"Name": "Kammertemperatur",
+			"Tooltip": "Zeigt die Temperatur im Bauraum an."
+		},
+		{
+			"Name": "Luft- & Lüftergeschwindigkeiten",
+			"Tooltip": "Zeigt die Drehzahlen von Bauteillüfter, Zusatzlüfter und Kammerfilterlüfter an."
+		},
+		{
+			"Name": "Aktiver Gcode & Geschwindigkeit",
+			"Tooltip": "Zeigt den Dateinamen des aktiven Gcodes und den Geschwindigkeitsmodus (Leise, Standard, Sport, Ludicrous) an."
+		},
+		{
+			"Name": "AMS-Übersicht",
+			"Tooltip": "Zeigt die 4 AMS-Spulen, geladene Farben, das aktive Fach und die Luftfeuchtigkeit an."
+		},
+		{
+			"Name": "AMS-Slot A1",
+			"Tooltip": "Zeigt Farbe und Status der Spule in AMS-Slot A1 an."
+		},
+		{
+			"Name": "AMS-Slot A2",
+			"Tooltip": "Zeigt Farbe und Status der Spule in AMS-Slot A2 an."
+		},
+		{
+			"Name": "AMS-Slot A3",
+			"Tooltip": "Zeigt Farbe und Status der Spule in AMS-Slot A3 an."
+		},
+		{
+			"Name": "AMS-Slot A4",
+			"Tooltip": "Zeigt Farbe und Status der Spule in AMS-Slot A4 an."
+		},
+		{
+			"Name": "Externe Spule",
+			"Tooltip": "Zeigt Farbe und Status der externen Spule (virtuelles Fach) an."
+		},
+		{
+			"Name": "Druckzeit und Schichten",
+			"Tooltip": "Zeigt die verbleibende Zeit, die vergangene Zeit und den Schichtfortschritt an."
+		},
+		{
+			"Name": "Kamera",
+			"Tooltip": "Zeigt eine Live-Vorschau der Druckerkamera (LAN). Drücken, um einen Schnappschuss zu speichern."
+		},
+		{
+			"Name": "Druckerlicht",
+			"Tooltip": "Zeigt den Zustand des Druckerlichts an. Drücken, um das Licht ein- oder auszuschalten."
+		}
+	],
+	"Localization": {
+		"Incorrect username or password": "Benutzername oder Passwort falsch",
+		"HTTP error {0}": "HTTP-Fehler {0}",
+		"A verification code sent by email is required": "Ein per E-Mail gesendeter Bestätigungscode ist erforderlich",
+		"A TOTP code from your authenticator app is required": "Ein TOTP-Code aus deiner Authenticator-App ist erforderlich",
+		"Could not obtain an access token.": "Zugriffstoken konnte nicht abgerufen werden.",
+		"Could not obtain the CSRF token": "CSRF-Token konnte nicht abgerufen werden",
+		"Verification code is incorrect or has expired.": "Der Bestätigungscode ist falsch oder abgelaufen.",
+		"Login failed (HTTP {0}); the response was not JSON. See the plugin log.": "Anmeldung fehlgeschlagen (HTTP {0}); die Antwort war kein JSON. Siehe Plugin-Protokoll.",
+		"Logged in, but printer list failed or was empty; see plugin log.": "Angemeldet, aber die Druckerliste ist fehlgeschlagen oder leer; siehe Plugin-Protokoll.",
+		"Bambu Printer": "Bambu-Drucker",
+		"No saved session token": "Kein gespeichertes Sitzungstoken",
+		"Sign In\nRequired": "Anmeldung\nnötig",
+		"Select\nPrinter": "Drucker\nwählen",
+		"Connecting...": "Verbinde...",
+		"Connection\nError": "Verbindungs-\nfehler",
+		"Token\nError": "Token-\nFehler",
+		"No Data": "Keine Daten",
+		"Camera\nSetup": "Kamera\neinrichten",
+		"Camera\nError": "Kamera-\nfehler",
+		"ffmpeg\nMissing": "ffmpeg\nfehlt"
+	}
+}

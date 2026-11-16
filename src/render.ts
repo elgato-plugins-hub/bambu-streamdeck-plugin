@@ -1,5 +1,6 @@
-// Genera imágenes SVG en formato Data URI para las acciones del Stream Deck.
+// Generates SVG data-URI images for the Stream Deck actions.
 import type { BambuTelemetry, GcodeState } from "./types";
+import { AMS_HT_FIRST_ID, amsUnitLabel } from "./ams";
 
 const SIZE = 144;
 
@@ -96,7 +97,51 @@ function formatHumidity(val: number | null, tempC?: number | null): string {
 
 // ── Individual Views (Big & Bold for Stream Deck Display) ───────────────────
 
+function textAt(x: number, y: number, text: string, size: number, color: string, weight = "800"): string {
+	return `<text x="${x}" y="${y}" font-family="Arial, Helvetica, sans-serif" font-size="${size}" font-weight="${weight}"
+		fill="${color}" text-anchor="middle">${esc(text)}</text>`;
+}
+
+/** Two-panel view for dual-nozzle printers: left nozzle on the left, right nozzle on the right, active one outlined. */
+function renderDualNozzleView(t: BambuTelemetry): string {
+	const nozzles = t.nozzles!;
+	const accent = STATE_COLOR[t.gcodeState];
+
+	const panel = (side: "left" | "right", x: number): string => {
+		const reading = nozzles[side];
+		const isActive = nozzles.active === side;
+		const current = Math.round(reading.tempC ?? 0);
+		const target = Math.round(reading.targetC ?? 0);
+
+		let targetLabel = "OFF";
+		let targetColor = MUTED;
+		if (target > 0) {
+			targetLabel = `→${target}°`;
+			targetColor = current < target - 2 ? "#ffbe3b" : "#00e65c";
+		} else if (current > 45) {
+			targetLabel = "COOL";
+			targetColor = "#3ba3ff";
+		}
+
+		const border = isActive ? `stroke="${accent}" stroke-width="4"` : `stroke="#383d47" stroke-width="2"`;
+		const cx = x + 30;
+		return `
+			<rect x="${x}" y="32" width="60" height="100" rx="10" fill="none" ${border}/>
+			${textAt(cx, 56, side === "left" ? "L" : "R", 18, isActive ? TEXT : MUTED, "900")}
+			${textAt(cx, 93, `${current}°`, 25, TEXT, "900")}
+			${textAt(cx, 118, targetLabel, 14, targetColor, "800")}
+		`;
+	};
+
+	return frame(`
+		${centerLabel("NOZZLES", 22, 15, MUTED, "800")}
+		${panel("left", 8)}
+		${panel("right", 76)}
+	`);
+}
+
 export function renderNozzleTempView(t: BambuTelemetry): string {
+	if (t.nozzles?.dual) return renderDualNozzleView(t);
 	const color = STATE_COLOR[t.gcodeState];
 	const current = Math.round(t.nozzleTempC ?? 0);
 	const target = Math.round(t.nozzleTargetC ?? 0);
@@ -201,9 +246,30 @@ export function renderTimeView(t: BambuTelemetry): string {
 	`);
 }
 
-export function renderAmsView(t: BambuTelemetry): string {
+/** "A1", "B3"... for regular units; just "HT1" for AMS HT units, which have a single slot. */
+function slotName(unitId: number, slot: number): string {
+	return unitId >= AMS_HT_FIRST_ID ? amsUnitLabel(unitId) : `${amsUnitLabel(unitId)}${slot + 1}`;
+}
+
+/** Filament currently in use, as short text for the overview key. */
+function activeFilamentText(ams: NonNullable<BambuTelemetry["ams"]>): string {
+	const active = ams.active;
+	if (!active) return "AMS Standby";
+	if (active.kind === "external") {
+		const spool = ams.externalSpools[active.index];
+		const hasTwo = ams.externalSpools[1] !== undefined && ams.externalSpools[1] !== null;
+		return hasTwo || active.index > 0 ? `EXT ${active.index + 1}: ${spool?.type || "PLA"}` : `EXT SPOOL (${spool?.type || "PLA"})`;
+	}
+	const unit = ams.units.find((u) => u.id === active.unitId);
+	const tray = unit?.trays.find((tr) => tr.index === active.slot);
+	return `${slotName(active.unitId, active.slot)}: ${tray?.type || "PLA"}`;
+}
+
+/** AMS overview: one unit at a time (the key cycles through units when pressed). */
+export function renderAmsView(t: BambuTelemetry, unitIndex = 0): string {
 	const ams = t.ams;
-	if (!ams || (!ams.units || ams.units.length === 0) && !ams.externalSpool) {
+	const hasExternal = !!ams?.externalSpools?.some((spool) => spool);
+	if (!ams || (ams.units.length === 0 && !hasExternal)) {
 		return frame(`
 			${centerLabel("AMS", 25, 16, MUTED, "800")}
 			<rect x="40" y="38" width="64" height="40" rx="6" fill="none" stroke="${MUTED}" stroke-width="4"/>
@@ -211,63 +277,64 @@ export function renderAmsView(t: BambuTelemetry): string {
 		`);
 	}
 
-	const unit = ams.units?.[0];
-	const humidityText = unit ? formatHumidity(unit.humidityPercent, unit.tempC) : "SPOOL";
-	const activeIndex = ams.activeTrayIndex ?? -1;
+	const count = ams.units.length;
+	const unit = count > 0 ? ams.units[((unitIndex % count) + count) % count] : undefined;
+	const isHt = !!unit && unit.id >= AMS_HT_FIRST_ID;
+	const prefix = unit ? amsUnitLabel(unit.id) : "";
+	const humidity = unit ? formatHumidity(unit.humidityPercent, unit.tempC) : "SPOOL";
+	const header = unit && (count > 1 || isHt) ? `${prefix} \u00b7 ${humidity}` : humidity;
+	const nozzleTag = unit?.nozzle && t.nozzles?.dual ? textAt(132, 11, unit.nozzle === "left" ? "L" : "R", 11, "#3ba3ff", "900") : "";
 
 	const slotWidth = 25;
 	const slotHeight = 46;
-	const startX = 13;
 	const gap = 7;
 	const y = 36;
+	const slotCount = isHt ? 1 : 4;
+	const startX = (144 - (slotCount * slotWidth + (slotCount - 1) * gap)) / 2;
 
-	const slotsSvg = [0, 1, 2, 3].map((i) => {
+	const slotsSvg = Array.from({ length: slotCount }, (_, i) => {
 		const x = startX + i * (slotWidth + gap);
 		const tray = unit?.trays.find((tr) => tr.index === i);
 		const color = tray?.color || "#5b6472";
-		const isActive = i === activeIndex;
+		const isActive = !!unit && ams.active?.kind === "ams" && ams.active.unitId === unit.id && ams.active.slot === i;
 		const activeBorder = isActive ? `stroke="#00e65c" stroke-width="3.5"` : `stroke="#383d47" stroke-width="2"`;
 		const activeArrow = isActive ? `<polygon points="${x + 6},92 ${x + 19},92 ${x + 12.5},85" fill="#00e65c"/>` : "";
 		const labelColor = isActive ? "#00e65c" : MUTED;
+		const label = isHt ? prefix : `${prefix || "A"}${i + 1}`;
 
 		return `
 			<rect x="${x}" y="${y}" width="${slotWidth}" height="${slotHeight}" rx="5" fill="${color}" ${activeBorder}/>
 			${activeArrow}
-			<text x="${x + 12.5}" y="110" font-family="Arial, sans-serif" font-size="14" font-weight="800" fill="${labelColor}" text-anchor="middle">A${i + 1}</text>
+			<text x="${x + 12.5}" y="110" font-family="Arial, sans-serif" font-size="14" font-weight="800" fill="${labelColor}" text-anchor="middle">${esc(label)}</text>
 		`;
 	}).join("");
 
-	let statusText = "AMS Standby";
-	if (ams.externalSpoolActive || activeIndex === 254) {
-		statusText = `EXT SPOOL (${ams.externalSpool?.type || "PLA"})`;
-	} else if (activeIndex >= 0 && activeIndex < 4 && unit) {
-		const activeTray = unit.trays.find((tr) => tr.index === activeIndex);
-		statusText = `A${activeIndex + 1}: ${activeTray?.type || "PLA"}`;
-	}
-
 	return frame(`
-		${centerLabel(humidityText, 24, 14, MUTED, "800")}
+		${centerLabel(header, 27, 14, MUTED, "800")}
+		${nozzleTag}
 		${slotsSvg}
-		${centerLabel(statusText, 132, 14, TEXT, "800")}
+		${centerLabel(activeFilamentText(ams), 132, 14, TEXT, "800")}
 	`);
 }
 
-export function renderAmsSlotView(t: BambuTelemetry, slotIndex: number): string {
+export function renderAmsSlotView(t: BambuTelemetry, slotIndex: number, unitId = 0): string {
 	const ams = t.ams;
-	const unit = ams?.units?.[0];
+	const unit = ams?.units?.find((u) => u.id === unitId);
 	const tray = unit?.trays?.find((tr) => tr.index === slotIndex);
-	const isActive = ams?.activeTrayIndex === slotIndex;
+	const isActive = ams?.active?.kind === "ams" && ams.active.unitId === unitId && ams.active.slot === slotIndex;
+	const noUnit = !!ams && ams.units.length > 0 && !unit;
+	const noSlot = !!unit && unit.trays.length > 0 && slotIndex >= unit.trays.length;
 
-	const slotName = `AMS A${slotIndex + 1}`;
+	const title = `AMS ${slotName(unitId, slotIndex)}`;
 	const color = tray?.color || "#5b6472";
-	const typeName = tray?.present ? (tray.type || "PLA") : "EMPTY";
+	const typeName = noUnit ? "--" : noSlot ? "--" : tray?.present ? (tray.type || "PLA") : "EMPTY";
 
 	const ringColor = isActive ? "#00e65c" : "#383d47";
-	const statusLabel = isActive ? "IN USE" : (tray?.present ? "LOADED" : "EMPTY");
+	const statusLabel = noUnit ? "NO UNIT" : noSlot ? "NO SLOT" : isActive ? "IN USE" : (tray?.present ? "LOADED" : "EMPTY");
 	const statusColor = isActive ? "#00e65c" : (tray?.present ? TEXT : MUTED);
 
 	return frame(`
-		${centerLabel(slotName, 25, 16, MUTED, "800")}
+		${centerLabel(title, 25, 16, MUTED, "800")}
 		<circle cx="72" cy="64" r="28" fill="${color}" stroke="${ringColor}" stroke-width="${isActive ? 5 : 2.5}"/>
 		<circle cx="72" cy="64" r="11" fill="${BG}"/>
 		${centerLabel(typeName, 110, 17, TEXT, "800")}
@@ -275,10 +342,11 @@ export function renderAmsSlotView(t: BambuTelemetry, slotIndex: number): string 
 	`);
 }
 
-export function renderExternalSpoolView(t: BambuTelemetry): string {
+export function renderExternalSpoolView(t: BambuTelemetry, spoolIndex = 0): string {
 	const ams = t.ams;
-	const ext = ams?.externalSpool;
-	const isActive = ams?.externalSpoolActive || ams?.activeTrayIndex === 254;
+	const ext = ams?.externalSpools?.[spoolIndex];
+	const isActive = ams?.active?.kind === "external" && ams.active.index === spoolIndex;
+	const hasTwo = !!ams?.externalSpools?.[1] || !!t.nozzles?.dual || spoolIndex > 0;
 
 	const color = ext?.color || "#5b6472";
 	const typeName = ext?.present ? (ext.type || "PLA") : "EMPTY";
@@ -288,7 +356,7 @@ export function renderExternalSpoolView(t: BambuTelemetry): string {
 	const statusColor = isActive ? "#00e65c" : (ext?.present ? TEXT : MUTED);
 
 	return frame(`
-		${centerLabel("EXT SPOOL", 25, 16, MUTED, "800")}
+		${centerLabel(hasTwo ? `EXT SPOOL ${spoolIndex + 1}` : "EXT SPOOL", 25, 16, MUTED, "800")}
 		<circle cx="72" cy="64" r="28" fill="${color}" stroke="${ringColor}" stroke-width="${isActive ? 5 : 2.5}"/>
 		<circle cx="72" cy="64" r="11" fill="${BG}"/>
 		${centerLabel(typeName, 110, 17, TEXT, "800")}
@@ -333,6 +401,25 @@ export function renderSubtaskView(t: BambuTelemetry): string {
 		<rect x="12" y="36" width="120" height="48" rx="8" fill="#1d212a" stroke="#383d47" stroke-width="2"/>
 		${centerLabel(truncated, 67, 18, TEXT, "900")}
 		${centerLabel(speedLabel, 126, 16, color, "900")}
+	`);
+}
+
+export function renderLightView(t: BambuTelemetry): string {
+	const on = t.lightOn === true;
+	const known = t.lightOn !== null && t.lightOn !== undefined;
+	const bulb = on ? "#ffd23b" : "#5b6472";
+	const rays = on
+		? `<g stroke="#ffd23b" stroke-width="4" stroke-linecap="round">
+			<line x1="72" y1="26" x2="72" y2="34"/><line x1="40" y1="42" x2="46" y2="48"/><line x1="104" y1="42" x2="98" y2="48"/>
+			<line x1="32" y1="66" x2="40" y2="66"/><line x1="112" y1="66" x2="104" y2="66"/></g>`
+		: "";
+	const label = known ? (on ? "ON" : "OFF") : "--";
+	return frame(`
+		${centerLabel("LIGHT", 22, 16, MUTED, "800")}
+		${rays}
+		<circle cx="72" cy="64" r="22" fill="${on ? bulb : "none"}" stroke="${bulb}" stroke-width="4.5"/>
+		<rect x="62" y="86" width="20" height="9" rx="3" fill="none" stroke="${bulb}" stroke-width="3.5"/>
+		${centerLabel(label, 128, 30, on ? "#ffd23b" : TEXT, "900")}
 	`);
 }
 

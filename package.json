@@ -4,7 +4,9 @@
 	"scripts": {
 		"build": "rollup -c",
 		"watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.alejandrocabo.bambuconnect\"",
-		"pack": "npm run build && streamdeck pack -f com.alejandrocabo.bambuconnect.sdPlugin"
+		"pack": "npm run build && streamdeck pack -f com.alejandrocabo.bambuconnect.sdPlugin",
+		"build:bundled": "node scripts/prepare-ffmpeg.mjs && rollup -c",
+		"pack:bundled": "npm run build:bundled && streamdeck pack -f com.alejandrocabo.bambuconnect.sdPlugin"
 	},
 	"type": "module",
 	"devDependencies": {

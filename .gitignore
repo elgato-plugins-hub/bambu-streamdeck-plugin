@@ -6,3 +6,4 @@ debug_mqtt_payload.json
 full_mqtt_snapshot.json
 *.streamDeckPlugin
 .DS_Store
+com.alejandrocabo.bambuconnect.sdPlugin/bin/ffmpeg/

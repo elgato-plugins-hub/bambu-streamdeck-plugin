@@ -12,6 +12,7 @@ import { cloudLogin, cloudVerifyCode, fetchDevices } from "../bambu-auth";
 import { BambuCloudService } from "../bambu-cloud-service";
 import { ERROR_COLOR, renderPlaceholder } from "../render";
 import type { BambuTelemetry, CloudRegion } from "../types";
+import { t } from "../i18n";
 
 export type BambuGlobalSettings = {
 	[key: string]: any;
@@ -19,6 +20,7 @@ export type BambuGlobalSettings = {
 	accountEmail?: string;
 	region?: CloudRegion;
 	deviceSerial?: string;
+	userId?: string;
 };
 
 export type BaseActionSettings = {
@@ -34,6 +36,8 @@ export interface Connection {
 	key: string;
 	lastTelemetry: BambuTelemetry | null;
 	viewIndex: number;
+	/** Latest settings of the key, so renderers can use per-key options (AMS unit, external spool...). */
+	settings: BaseActionSettings;
 }
 
 export abstract class BasePrinterAction<TSettings extends BaseActionSettings = BaseActionSettings> extends SingletonAction<TSettings> {
@@ -132,7 +136,7 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 			try {
 				const globals = await streamDeck.settings.getGlobalSettings<BambuGlobalSettings>();
 				const token = payload.token || globals.userToken || ev.payload.settings.userToken;
-				if (!token) throw new Error("No saved session token");
+				if (!token) throw new Error(t("No saved session token"));
 				const devices = await fetchDevices(region, token);
 				if (devices.length > 0 && !globals.deviceSerial) {
 					await streamDeck.settings.setGlobalSettings({
@@ -154,6 +158,8 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 		const userToken = settings.userToken || globals.userToken;
 		const region = settings.region || globals.region || "us";
 		const deviceSerial = settings.deviceSerial || globals.deviceSerial;
+		const rawUserId = String(settings.userId || globals.userId || "").trim();
+		const userId = rawUserId ? (/^u_/i.test(rawUserId) ? rawUserId : `u_${rawUserId}`) : undefined;
 
 		if (globals.userToken && (!settings.userToken || !settings.deviceSerial)) {
 			await keyAction.setSettings({
@@ -165,17 +171,18 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 			} as any);
 		}
 
-		const key = userToken && deviceSerial ? `${userToken}::${deviceSerial}::${region}` : null;
+		const key = userToken && deviceSerial ? `${userToken}::${deviceSerial}::${region}::${userId ?? ""}` : null;
 		const existing = BasePrinterAction.connections.get(actionId);
 
 		if (!key) {
 			if (existing) this.teardown(actionId);
-			const msg = !userToken ? "Sign In\nRequired" : "Select\nPrinter";
+			const msg = !userToken ? t("Sign In\nRequired") : t("Select\nPrinter");
 			await this.safeSetImage(keyAction, renderPlaceholder(msg), actionId);
 			return;
 		}
 
 		if (existing?.key === key) {
+			existing.settings = settings;
 			await this.safeSetImage(keyAction, this.renderTelemetryImage(existing.lastTelemetry, existing), actionId);
 			return;
 		}
@@ -187,9 +194,10 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 			userToken: userToken!,
 			deviceSerial: deviceSerial!,
 			region,
+			userId,
 			debug: true,
 		});
-		const conn: Connection = { service, key, lastTelemetry: null, viewIndex: 0 };
+		const conn: Connection = { service, key, lastTelemetry: null, viewIndex: 0, settings };
 		BasePrinterAction.connections.set(actionId, conn);
 
 		service.on("telemetry", (t: BambuTelemetry) => {
@@ -198,16 +206,16 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 		});
 		service.on("error", (err: Error) => {
 			streamDeck.logger.error(`[action:${actionId}] MQTT Error: ${err.message}`);
-			void this.safeSetImage(keyAction, renderPlaceholder("Connection\nError", ERROR_COLOR), actionId);
+			void this.safeSetImage(keyAction, renderPlaceholder(t("Connection\nError"), ERROR_COLOR), actionId);
 			void this.safeShowAlert(keyAction, actionId);
 		});
 
-		await this.safeSetImage(keyAction, renderPlaceholder("Connecting..."), actionId);
+		await this.safeSetImage(keyAction, renderPlaceholder(t("Connecting...")), actionId);
 		try {
 			await service.connect();
 		} catch (err) {
 			streamDeck.logger.error(`[action:${actionId}] Connect Error: ${(err as Error).message}`);
-			await this.safeSetImage(keyAction, renderPlaceholder("Token\nError", ERROR_COLOR), actionId);
+			await this.safeSetImage(keyAction, renderPlaceholder(t("Token\nError"), ERROR_COLOR), actionId);
 		}
 	}
 
