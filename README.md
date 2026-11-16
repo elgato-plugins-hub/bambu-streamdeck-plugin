@@ -55,6 +55,23 @@
 4. Select your printer (`KBO-P2S`, `X1C`, `P1S`, `A1`...) from the dropdown menu.
 5. All other keys will automatically connect to your selected printer!
 
+### If your printer is not listed
+
+Bambu's Cloudflare protection can block the printer-list request from some networks, so the dropdown stays empty
+and the key may show `Token Error`. The live MQTT connection is not affected, so you can enter the details by hand:
+
+1. In the signed-in Property Inspector, type your **printer serial number** (printed on the printer's label and shown in Bambu Handy / Bambu Studio).
+2. Enter your numeric **Bambu User ID** (with or without the `u_` prefix). In Bambu Studio on Windows, the account's folder name under `%APPDATA%\BambuStudio\user\` is your user ID.
+3. Click **Use This Serial / User ID**. The key reconnects using these values.
+
+Details of failed requests are written to the plugin log (`com.alejandrocabo.bambuconnect.sdPlugin/logs/`). Check it before reporting a problem, and remove your serial number and user ID from anything you share.
+
+---
+
+## 🌍 Languages
+
+Messages follow the Stream Deck app language. English, Spanish (`es`), German (`de`) and French (`fr`) are included, and any other language falls back to English. To add a language, create `<lang>.json` in the plugin folder (copy `es.json` as a template: keep the English keys and translate the values) and add the same language to `com.alejandrocabo.bambuconnect.sdPlugin/ui/i18n.js`. Text drawn on the key faces is not yet localized.
+
 ---
 
 ## 🛠️ Development & Building
