@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Dual-nozzle support on the Nozzle Temp key.** Printers that report more than one extruder (H2D, X2D) now show
+  both nozzles, left and right, with their current and target temperatures and the active nozzle outlined. The
+  plugin reads the per-nozzle data in `device.extruder` instead of the single `nozzle_temper` field, which on these
+  printers only describes whichever nozzle is active. Single-nozzle printers are unchanged.
 - **Light Toggle action**: a key that shows whether the printer light is on or off and switches it when pressed
   (`ledctrl` over the existing Bambu Cloud MQTT connection). The service now also reads `lights_report`, so the
   light state is available to the plugin. Includes Spanish, German and French strings.

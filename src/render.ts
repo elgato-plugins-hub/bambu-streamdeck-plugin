@@ -96,7 +96,51 @@ function formatHumidity(val: number | null, tempC?: number | null): string {
 
 // ── Individual Views (Big & Bold for Stream Deck Display) ───────────────────
 
+function textAt(x: number, y: number, text: string, size: number, color: string, weight = "800"): string {
+	return `<text x="${x}" y="${y}" font-family="Arial, Helvetica, sans-serif" font-size="${size}" font-weight="${weight}"
+		fill="${color}" text-anchor="middle">${esc(text)}</text>`;
+}
+
+/** Two-panel view for dual-nozzle printers: left nozzle on the left, right nozzle on the right, active one outlined. */
+function renderDualNozzleView(t: BambuTelemetry): string {
+	const nozzles = t.nozzles!;
+	const accent = STATE_COLOR[t.gcodeState];
+
+	const panel = (side: "left" | "right", x: number): string => {
+		const reading = nozzles[side];
+		const isActive = nozzles.active === side;
+		const current = Math.round(reading.tempC ?? 0);
+		const target = Math.round(reading.targetC ?? 0);
+
+		let targetLabel = "OFF";
+		let targetColor = MUTED;
+		if (target > 0) {
+			targetLabel = `→${target}°`;
+			targetColor = current < target - 2 ? "#ffbe3b" : "#00e65c";
+		} else if (current > 45) {
+			targetLabel = "COOL";
+			targetColor = "#3ba3ff";
+		}
+
+		const border = isActive ? `stroke="${accent}" stroke-width="4"` : `stroke="#383d47" stroke-width="2"`;
+		const cx = x + 30;
+		return `
+			<rect x="${x}" y="32" width="60" height="100" rx="10" fill="none" ${border}/>
+			${textAt(cx, 56, side === "left" ? "L" : "R", 18, isActive ? TEXT : MUTED, "900")}
+			${textAt(cx, 93, `${current}°`, 25, TEXT, "900")}
+			${textAt(cx, 118, targetLabel, 14, targetColor, "800")}
+		`;
+	};
+
+	return frame(`
+		${centerLabel("NOZZLES", 22, 15, MUTED, "800")}
+		${panel("left", 8)}
+		${panel("right", 76)}
+	`);
+}
+
 export function renderNozzleTempView(t: BambuTelemetry): string {
+	if (t.nozzles?.dual) return renderDualNozzleView(t);
 	const color = STATE_COLOR[t.gcodeState];
 	const current = Math.round(t.nozzleTempC ?? 0);
 	const target = Math.round(t.nozzleTargetC ?? 0);

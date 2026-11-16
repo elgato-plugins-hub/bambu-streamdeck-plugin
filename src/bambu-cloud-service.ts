@@ -10,6 +10,8 @@ import {
 	BambuTelemetry,
 	CloudRegion,
 	GcodeState,
+	NozzleReading,
+	NozzleSide,
 } from "./types";
 
 const BAMBU_PORT = 8883;
@@ -80,6 +82,11 @@ async function fetchUserIdFromProfile(token: string, region: CloudRegion): Promi
 		streamDeck.logger.error(`[fetchUserIdFromProfile] request failed: ${(e as Error).message}`);
 		return null;
 	}
+}
+
+/** Splits a packed temperature word: low 16 bits are the current value, high 16 bits the target. */
+export function unpackTemperature(packed: number): NozzleReading {
+	return { tempC: packed & 0xffff, targetC: (packed >>> 16) & 0xffff };
 }
 
 function parseGcodeState(raw: unknown): GcodeState | null {
@@ -169,6 +176,13 @@ export class BambuCloudService extends EventEmitter {
 	/** Light node reported by the printer (chamber_light, work_light...), used for ledctrl commands. */
 	private lightNode = "chamber_light";
 	private ledSeq = 2000;
+	/** Set once the printer reports more than one extruder; the legacy single-nozzle fields then stop being trusted. */
+	private dualNozzle = false;
+	private nozzleReadings: Record<NozzleSide, NozzleReading> = {
+		right: { tempC: null, targetC: null },
+		left: { tempC: null, targetC: null },
+	};
+	private activeNozzle: NozzleSide | null = null;
 	private client: MqttClient | null = null;
 	private pushallSeq = 0;
 	private pushallTimer: NodeJS.Timeout | null = null;
@@ -199,6 +213,7 @@ export class BambuCloudService extends EventEmitter {
 			subtaskName: null,
 			nozzleTempC: null,
 			nozzleTargetC: null,
+			nozzles: null,
 			bedTempC: null,
 			bedTargetC: null,
 			chamberTempC: null,
@@ -304,8 +319,13 @@ export class BambuCloudService extends EventEmitter {
 			if (typeof print.subtask_name === "string" && print.subtask_name) this.cumulativeTelemetry.subtaskName = print.subtask_name;
 			if (print.spd_lvl !== undefined) this.cumulativeTelemetry.speedLevel = Number(print.spd_lvl);
 
-			if (typeof print.nozzle_temper === "number") this.cumulativeTelemetry.nozzleTempC = print.nozzle_temper;
-			if (typeof print.nozzle_target_temper === "number") this.cumulativeTelemetry.nozzleTargetC = print.nozzle_target_temper;
+			this.parseExtruders(print);
+			// On dual-nozzle printers the legacy fields only describe whichever nozzle is active, so they must not
+			// overwrite the per-nozzle readings.
+			if (!this.dualNozzle) {
+				if (typeof print.nozzle_temper === "number") this.cumulativeTelemetry.nozzleTempC = print.nozzle_temper;
+				if (typeof print.nozzle_target_temper === "number") this.cumulativeTelemetry.nozzleTargetC = print.nozzle_target_temper;
+			}
 			if (typeof print.bed_temper === "number") this.cumulativeTelemetry.bedTempC = print.bed_temper;
 			if (typeof print.bed_target_temper === "number") this.cumulativeTelemetry.bedTargetC = print.bed_target_temper;
 
@@ -374,6 +394,52 @@ export class BambuCloudService extends EventEmitter {
 
 			this.emit("telemetry", { ...this.cumulativeTelemetry });
 		});
+	}
+
+	/**
+	 * Reads device.extruder: `info[]` has one entry per nozzle (id 0 = right, id 1 = left) whose `temp` packs the
+	 * current temperature in the low 16 bits and the target in the high 16 bits; `state` holds the extruder count
+	 * in its low 4 bits and the active nozzle in the next 4 (15 while switching).
+	 */
+	private parseExtruders(print: any): void {
+		const extruder = print?.device?.extruder;
+		if (!extruder) return;
+
+		const info: any[] = Array.isArray(extruder.info) ? extruder.info : [];
+		const state = typeof extruder.state === "number" ? extruder.state : null;
+		if (info.length >= 2 || (state !== null && (state & 0xf) >= 2)) this.dualNozzle = true;
+
+		const sides: Record<number, NozzleSide> = { 0: "right", 1: "left" };
+		for (const entry of info) {
+			const side = sides[entry?.id as number];
+			if (!side || typeof entry.temp !== "number") continue;
+			this.nozzleReadings[side] = unpackTemperature(entry.temp);
+		}
+
+		if (state !== null) {
+			const index = (state >> 4) & 0xf;
+			if (index === 0 || index === 1) this.activeNozzle = sides[index];
+		}
+
+		if (!this.dualNozzle) {
+			// Newer firmware reports even a single nozzle here.
+			const only = this.nozzleReadings.right;
+			if (only.tempC !== null) {
+				this.cumulativeTelemetry.nozzleTempC = only.tempC;
+				this.cumulativeTelemetry.nozzleTargetC = only.targetC;
+			}
+			return;
+		}
+
+		const active = this.activeNozzle ?? "right";
+		this.cumulativeTelemetry.nozzles = {
+			dual: true,
+			active: this.activeNozzle,
+			left: { ...this.nozzleReadings.left },
+			right: { ...this.nozzleReadings.right },
+		};
+		this.cumulativeTelemetry.nozzleTempC = this.nozzleReadings[active].tempC;
+		this.cumulativeTelemetry.nozzleTargetC = this.nozzleReadings[active].targetC;
 	}
 
 	requestPushAll(): void {

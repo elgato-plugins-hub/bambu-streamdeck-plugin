@@ -27,7 +27,7 @@
 | Action | Description |
 | :--- | :--- |
 | **Print Progress** | Ring arc percentage, state (`PRINTING`, `PAUSED`, `FINISHED`). |
-| **Nozzle Temp** | Current/target temp with `HEATING 🔥` / `COOLING ❄️` indicators. |
+| **Nozzle Temp** | Current/target temp with `HEATING 🔥` / `COOLING ❄️` indicators. On dual-nozzle printers (H2D, X2D) it shows both nozzles side by side (`L` / `R`) with the active one outlined. |
 | **Heatbed Temp** | Heatbed current/target temp with thermal status badges. |
 | **Chamber Temp** | Internal chamber ambient temperature. |
 | **Air & Fan Speeds** | Part, Aux, and Chamber filter fan speeds (`0–100%`). |

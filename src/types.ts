@@ -56,6 +56,22 @@ export interface FanState {
   heatbreakPercent: number | null;
 }
 
+export type NozzleSide = 'left' | 'right';
+
+export interface NozzleReading {
+  tempC: number | null;
+  targetC: number | null;
+}
+
+/** Per-nozzle state reported by printers with more than one nozzle (H2D, X2D...). */
+export interface NozzleState {
+  dual: boolean;
+  /** The nozzle currently in use, or null when unknown (for example while switching). */
+  active: NozzleSide | null;
+  left: NozzleReading;
+  right: NozzleReading;
+}
+
 export interface BambuTelemetry {
   timestamp: number;
   deviceSerial: string;
@@ -68,6 +84,8 @@ export interface BambuTelemetry {
   subtaskName: string | null;
   nozzleTempC: number | null;
   nozzleTargetC: number | null;
+  /** Per-nozzle readings; null until the printer reports them. nozzleTempC/nozzleTargetC always mirror the active nozzle. */
+  nozzles: NozzleState | null;
   bedTempC: number | null;
   bedTargetC: number | null;
   chamberTempC: number | null;
