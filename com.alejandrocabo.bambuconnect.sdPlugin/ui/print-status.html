@@ -180,12 +180,12 @@
                     <polyline points="10 17 15 12 10 7"></polyline>
                     <line x1="15" y1="12" x2="3" y2="12"></line>
                 </svg>
-                Sign In to Bambu Cloud
+                <span data-i18n="Sign In to Bambu Cloud">Sign In to Bambu Cloud</span>
             </div>
         </div>
 
         <div class="form-group">
-            <label for="region">Account Region</label>
+            <label for="region" data-i18n="Account Region">Account Region</label>
             <select id="region">
                 <option value="us">Global / Europe / America (US)</option>
                 <option value="cn">China (CN)</option>
@@ -193,22 +193,22 @@
         </div>
 
         <div class="form-group">
-            <label for="account">Bambu Lab Account Email</label>
+            <label for="account" data-i18n="Bambu Lab Account Email">Bambu Lab Account Email</label>
             <input type="text" id="account" placeholder="user@example.com" autocomplete="username" />
         </div>
 
         <div class="form-group">
-            <label for="password">Password</label>
+            <label for="password" data-i18n="Password">Password</label>
             <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
         </div>
 
         <!-- 2FA FIELD -->
         <div id="tfaGroup" class="form-group hidden">
-            <label id="tfaLabel" for="tfaCode">Verification Code</label>
-            <input type="text" id="tfaCode" placeholder="e.g. 123456" />
+            <label id="tfaLabel" for="tfaCode" data-i18n="Verification Code">Verification Code</label>
+            <input type="text" id="tfaCode" placeholder="e.g. 123456" data-i18n-placeholder="e.g. 123456" />
         </div>
 
-        <button id="btnLogin" class="btn" type="button">Sign In</button>
+        <button id="btnLogin" class="btn" type="button" data-i18n="Sign In">Sign In</button>
         <div id="statusMsg" class="status-msg"></div>
     </div>
 
@@ -220,42 +220,52 @@
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
-                Bambu Account Connected
+                <span data-i18n="Bambu Account Connected">Bambu Account Connected</span>
             </div>
-            <button id="btnLogout" class="btn-danger" type="button">Sign Out</button>
+            <button id="btnLogout" class="btn-danger" type="button" data-i18n="Sign Out">Sign Out</button>
         </div>
 
         <div class="user-badge">
             <span id="userAccountText">user@bambulab.com</span>
-            <span>✓ Globally Connected</span>
+            <span data-i18n="✓ Globally Connected">✓ Globally Connected</span>
         </div>
 
         <div class="form-group">
-            <label for="deviceSelect">Select Printer for this Key</label>
+            <label for="deviceSelect" data-i18n="Select Printer for this Key">Select Printer for this Key</label>
             <select id="deviceSelect">
-                <option value="">Loading printers...</option>
+                <option value="" data-i18n="Loading printers...">Loading printers...</option>
             </select>
         </div>
 
-        <button id="btnReloadDevices" class="btn btn-secondary" type="button">🔄 Refresh Printer List</button>
+        <button id="btnReloadDevices" class="btn btn-secondary" type="button" data-i18n="🔄 Refresh Printer List">🔄 Refresh Printer List</button>
+
+        <div class="form-group" style="margin-top:12px">
+            <label for="manualSerial" data-i18n="Or enter printer serial manually">Or enter printer serial manually</label>
+            <input type="text" id="manualSerial" placeholder="e.g. 22E00A123456" data-i18n-placeholder="e.g. 22E00A123456" autocomplete="off" />
+        </div>
+        <div class="form-group">
+            <label for="manualUserId" data-i18n="Bambu User ID (needed if the printer list is blocked)">Bambu User ID (needed if the printer list is blocked)</label>
+            <input type="text" id="manualUserId" placeholder="e.g. u_1234567890 or 1234567890" data-i18n-placeholder="e.g. u_1234567890 or 1234567890" autocomplete="off" />
+        </div>
+        <button id="btnSaveSerial" class="btn btn-secondary" type="button" data-i18n="Use This Serial / User ID">Use This Serial / User ID</button>
         <div id="loggedInStatusMsg" class="status-msg"></div>
     </div>
 
     <!-- MANUAL / ADVANCED MODE -->
     <div id="manualSection" class="card hidden">
         <div class="card-title">
-            ⚙️ Advanced Manual Settings
+            <span data-i18n="⚙️ Advanced Manual Settings">⚙️ Advanced Manual Settings</span>
         </div>
-        <sdpi-item label="Print Usage Hours">
-            <sdpi-textfield setting="initialHours" placeholder="e.g. 142 (Optional)"></sdpi-textfield>
+        <sdpi-item label="Print Usage Hours" data-i18n-label="Print Usage Hours">
+            <sdpi-textfield setting="initialHours" placeholder="e.g. 142 (Optional)" data-i18n-placeholder="e.g. 142 (Optional)"></sdpi-textfield>
         </sdpi-item>
-        <sdpi-item label="Bambu JWT Token">
-            <sdpi-textfield setting="userToken" type="password" placeholder="Paste JWT token"></sdpi-textfield>
+        <sdpi-item label="Bambu JWT Token" data-i18n-label="Bambu JWT Token">
+            <sdpi-textfield setting="userToken" type="password" placeholder="Paste JWT token" data-i18n-placeholder="Paste JWT token"></sdpi-textfield>
         </sdpi-item>
-        <sdpi-item label="Serial Number">
-            <sdpi-textfield setting="deviceSerial" placeholder="e.g. 22E00A123456"></sdpi-textfield>
+        <sdpi-item label="Serial Number" data-i18n-label="Serial Number">
+            <sdpi-textfield setting="deviceSerial" placeholder="e.g. 22E00A123456" data-i18n-placeholder="e.g. 22E00A123456"></sdpi-textfield>
         </sdpi-item>
-        <sdpi-item label="Region">
+        <sdpi-item label="Region" data-i18n-label="Region">
             <sdpi-select setting="region" default="us">
                 <option value="us">US / EU</option>
                 <option value="cn">China</option>
@@ -263,8 +273,9 @@
         </sdpi-item>
     </div>
 
-    <div class="toggle-manual" id="toggleManual">View Advanced Manual Settings</div>
+    <div class="toggle-manual" id="toggleManual" data-i18n="View Advanced Manual Settings">View Advanced Manual Settings</div>
 
+    <script src="i18n.js"></script>
     <script>
         let websocket = null;
         let pluginUUID = null;
@@ -334,7 +345,7 @@
             if (token) {
                 loginSectionEl.classList.add("hidden");
                 loggedInSectionEl.classList.remove("hidden");
-                userAccountTextEl.innerText = email || "Bambu Lab Account";
+                userAccountTextEl.innerText = email || t("Bambu Lab Account");
             } else {
                 loginSectionEl.classList.remove("hidden");
                 loggedInSectionEl.classList.add("hidden");
@@ -348,14 +359,14 @@
             const tfaCode = tfaCodeEl.value.trim();
 
             if (!account || !password) {
-                showStatus("Please enter your email and password", true);
+                showStatus(t("Please enter your email and password"), true);
                 return;
             }
 
             btnLoginEl.disabled = true;
 
             if (activeLoginState) {
-                showStatus("Verifying code...");
+                showStatus(t("Verifying code..."));
                 sendToPlugin({
                     event: "verifyCode",
                     region,
@@ -365,7 +376,7 @@
                     tfaKey: activeLoginState.tfaKey
                 });
             } else {
-                showStatus("Signing in to Bambu Cloud...");
+                showStatus(t("Signing in to Bambu Cloud..."));
                 sendToPlugin({
                     event: "login",
                     region,
@@ -390,7 +401,7 @@
         btnReloadDevicesEl.addEventListener("click", () => {
             const token = currentSettings.userToken || globalSettings.userToken;
             if (token) {
-                showStatus("Loading printers...", false, loggedInStatusMsgEl);
+                showStatus(t("Loading printers..."), false, loggedInStatusMsgEl);
                 sendToPlugin({
                     event: "fetchDevices",
                     region: globalSettings.region || regionEl.value || "us",
@@ -399,34 +410,57 @@
             }
         });
 
+        function applySerial(serial, userId) {
+            const extra = userId ? { userId } : {};
+            saveSettings({
+                deviceSerial: serial,
+                ...extra
+            });
+            globalSettings = { ...globalSettings, deviceSerial: serial, ...extra };
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                const reqGlobals = {
+                    event: "setGlobalSettings",
+                    context: pluginUUID,
+                    payload: globalSettings
+                };
+                websocket.send(JSON.stringify(reqGlobals));
+            }
+            showStatus(t("Printer saved! The key will now update."), false, loggedInStatusMsgEl);
+        }
+
         deviceSelectEl.addEventListener("change", (e) => {
             const serial = e.target.value;
-            if (serial) {
-                saveSettings({
-                    deviceSerial: serial
-                });
-                if (websocket && websocket.readyState === WebSocket.OPEN) {
-                    const reqGlobals = {
-                        event: "setGlobalSettings",
-                        context: pluginUUID,
-                        payload: { ...globalSettings, deviceSerial: serial }
-                    };
-                    websocket.send(JSON.stringify(reqGlobals));
-                }
-                showStatus("Printer saved! The key will now update.", false, loggedInStatusMsgEl);
+            if (serial) applySerial(serial);
+        });
+
+        document.getElementById("btnSaveSerial").addEventListener("click", () => {
+            const serial = document.getElementById("manualSerial").value.trim().toUpperCase();
+            if (!/^[A-Z0-9]{10,20}$/.test(serial)) {
+                showStatus(t("Enter a valid printer serial (letters and digits, no spaces)."), true, loggedInStatusMsgEl);
+                return;
             }
+            const userId = document.getElementById("manualUserId").value.trim();
+            if (userId && !/^(u_)?\d{4,}$/i.test(userId)) {
+                showStatus(t("User ID should be digits only, optionally starting with u_."), true, loggedInStatusMsgEl);
+                return;
+            }
+            applySerial(serial, userId);
         });
 
         function populateDevices(devices) {
             deviceSelectEl.innerHTML = "";
             if (!devices || devices.length === 0) {
-                deviceSelectEl.innerHTML = '<option value="">No printers found in your account</option>';
+                deviceSelectEl.innerHTML = "";
+                const none = document.createElement("option");
+                none.value = "";
+                none.innerText = t("No printers found in your account");
+                deviceSelectEl.appendChild(none);
                 return;
             }
 
             const defaultOpt = document.createElement("option");
             defaultOpt.value = "";
-            defaultOpt.innerText = "-- Select printer for this key --";
+            defaultOpt.innerText = t("-- Select printer for this key --");
             deviceSelectEl.appendChild(defaultOpt);
 
             devices.forEach(d => {
@@ -443,6 +477,7 @@
 
         window.connectElgatoStreamDeckSocket = function(inPort, inPropertyInspectorUUID, inRegisterEvent, inInfo, inActionInfo) {
             pluginUUID = inPropertyInspectorUUID;
+            initI18n(inInfo);
             currentActionInfo = JSON.parse(inActionInfo);
             currentSettings = currentActionInfo.payload.settings || {};
 
@@ -499,22 +534,22 @@
                                 deviceSerial: firstDevice
                             });
                             updateUIState();
-                            showStatus("Login successful! Select your printer below.", false, loggedInStatusMsgEl);
+                            showStatus(t("Login successful! Select your printer below."), false, loggedInStatusMsgEl);
                             populateDevices(payload.devices);
                         } else if (payload.loginType) {
                             activeLoginState = { loginType: payload.loginType, tfaKey: payload.tfaKey };
                             tfaGroupEl.classList.remove("hidden");
-                            tfaLabelEl.innerText = payload.loginType === "verifyCode" ? "Code sent to your Email" : "TOTP Code from your App";
-                            btnLoginEl.innerText = "Verify Code";
-                            showStatus(payload.error || "Enter code to continue.", true);
+                            tfaLabelEl.innerText = payload.loginType === "verifyCode" ? t("Code sent to your Email") : t("TOTP Code from your App");
+                            btnLoginEl.innerText = t("Verify Code");
+                            showStatus(payload.error || t("Enter code to continue."), true);
                         } else {
-                            showStatus(payload.error || "Login error", true);
+                            showStatus(payload.error || t("Login error"), true);
                         }
                     } else if (payload.event === "devicesResult") {
                         if (payload.success) {
                             populateDevices(payload.devices);
                         } else {
-                            showStatus("Error fetching printers: " + payload.error, true, loggedInStatusMsgEl);
+                            showStatus(t("Could not fetch the printer list ({0}). Enter your printer serial below instead.", String(payload.error).split("\n")[0].slice(0, 80)), true, loggedInStatusMsgEl);
                         }
                     }
                 }

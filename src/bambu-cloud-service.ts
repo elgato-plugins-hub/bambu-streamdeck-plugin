@@ -1,3 +1,4 @@
+import streamDeck from "@elgato/streamdeck";
 import mqtt, { MqttClient } from "mqtt";
 import { EventEmitter } from "node:events";
 import { randomBytes } from "node:crypto";
@@ -25,33 +26,60 @@ function apiBase(region: CloudRegion): string {
 
 function decodeJwtUserId(token: string): string | null {
 	const parts = token.split(".");
-	if (parts.length < 2) return null;
+	if (parts.length < 2) {
+		streamDeck.logger.warn(`[decodeJwtUserId] token is not a JWT (segments=${parts.length}, length=${token.length})`);
+		return null;
+	}
 	try {
 		const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
 		const payload = JSON.parse(payloadJson);
+		const named = typeof payload.username === "string" && /^u_\d+$/.test(payload.username) ? payload.username : null;
+		if (named) return named;
 		const uid = payload.uid ?? payload.sub ?? payload.user_id;
-		if (uid === undefined || uid === null || uid === "") return null;
+		if (uid === undefined || uid === null || uid === "") {
+			streamDeck.logger.warn(`[decodeJwtUserId] no user id claim; payload keys=${Object.keys(payload).join(",")}`);
+			return null;
+		}
 		return `u_${uid}`;
-	} catch {
+	} catch (e) {
+		streamDeck.logger.warn(`[decodeJwtUserId] could not decode token payload: ${(e as Error).message}`);
 		return null;
 	}
 }
 
 async function fetchUserIdFromProfile(token: string, region: CloudRegion): Promise<string | null> {
 	const url = `${apiBase(region)}/v1/user-service/my/profile`;
-	const res = await fetch(url, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-			"User-Agent": "bambu_network_agent/01.09.05.01",
-			"X-BBL-Client-Name": "OrcaSlicer",
-			"X-BBL-Client-Type": "slicer",
-		},
-	});
-	if (!res.ok) return null;
-	const body = (await res.json()) as { uidStr?: string; uid?: string | number };
-	const uid = body.uidStr ?? body.uid;
-	if (uid === undefined || uid === null || uid === "") return null;
-	return `u_${uid}`;
+	try {
+		const res = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"User-Agent": "bambu_network_agent/01.09.05.01",
+				"X-BBL-Client-Name": "OrcaSlicer",
+				"X-BBL-Client-Type": "slicer",
+				Accept: "application/json",
+			},
+			signal: AbortSignal.timeout(15000),
+		});
+		const text = await res.text();
+		streamDeck.logger.info(`[fetchUserIdFromProfile] GET ${url} -> ${res.status}; body=${text.slice(0, 120).replace(/\s+/g, " ")}`);
+		if (!res.ok) return null;
+		let body: any;
+		try {
+			body = JSON.parse(text);
+		} catch {
+			return null;
+		}
+		const src = body?.data && typeof body.data === "object" ? body.data : body;
+		const uid = src?.uidStr ?? src?.uid ?? src?.user_id ?? src?.userId;
+		if (uid === undefined || uid === null || uid === "") {
+			streamDeck.logger.warn(`[fetchUserIdFromProfile] no uid field; keys=${Object.keys(src ?? {}).join(",")}`);
+			return null;
+		}
+		return `u_${uid}`;
+	} catch (e) {
+		streamDeck.logger.error(`[fetchUserIdFromProfile] request failed: ${(e as Error).message}`);
+		return null;
+	}
 }
 
 function parseGcodeState(raw: unknown): GcodeState | null {
@@ -188,11 +216,11 @@ export class BambuCloudService extends EventEmitter {
 		if (!this.userId) {
 			this.userId = decodeJwtUserId(this.options.userToken);
 			if (!this.userId) {
-				this.log("el token no parece un JWT decodificable, probando /profile...");
+				this.log("token is not a decodable JWT, trying /profile...");
 				this.userId = await fetchUserIdFromProfile(this.options.userToken, this.options.region);
 			}
 			if (!this.userId) {
-				throw new Error("No se pudo resolver el userId de Bambu a partir del token");
+				throw new Error("Could not resolve the Bambu user ID from the token");
 			}
 			this.log("userId resuelto:", this.userId);
 		}
@@ -200,7 +228,7 @@ export class BambuCloudService extends EventEmitter {
 		const host = brokerHost(this.options.region);
 		const clientId = `bblp_${randomBytes(6).toString("hex")}`;
 
-		this.log(`conectando a mqtts://${host}:${BAMBU_PORT} como ${this.userId}`);
+		this.log(`connecting to mqtts://${host}:${BAMBU_PORT} as ${this.userId}`);
 
 		this.client = mqtt.connect({
 			host,
@@ -222,7 +250,7 @@ export class BambuCloudService extends EventEmitter {
 					this.emit("error", err);
 					return;
 				}
-				this.log("suscrito a", topic);
+				this.log("subscribed to", topic);
 				this.emit("connected");
 				if (this.options.pushAllOnConnect) this.requestPushAll();
 
@@ -233,9 +261,9 @@ export class BambuCloudService extends EventEmitter {
 			});
 		});
 
-		this.client.on("reconnect", () => this.log("reconectando..."));
+		this.client.on("reconnect", () => this.log("reconnecting..."));
 		this.client.on("close", () => {
-			this.log("conexion cerrada");
+			this.log("connection closed");
 			this.emit("disconnected");
 		});
 		this.client.on("error", (err) => {
@@ -346,7 +374,7 @@ export class BambuCloudService extends EventEmitter {
 			},
 		});
 		this.client.publish(topic, payload);
-		this.log("pushall enviado");
+		this.log("pushall sent");
 	}
 
 	disconnect(): void {
