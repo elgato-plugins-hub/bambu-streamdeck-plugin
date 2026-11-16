@@ -109,7 +109,7 @@ export class Camera extends SingletonAction<CameraSettings> {
 					conn.pending = false;
 				});
 		});
-		stream.on("status", (status: string, detail?: string) => {
+		stream.on("status", (status: string, detail?: string, kind?: string) => {
 			if (status === "connecting") {
 				streamDeck.logger.info(`[camera:${actionId}] connecting to ${host}`);
 				void this.safeSetImage(keyAction, renderPlaceholder(t("Connecting...")), actionId);
@@ -117,7 +117,8 @@ export class Camera extends SingletonAction<CameraSettings> {
 				streamDeck.logger.info(`[camera:${actionId}] streaming`);
 			} else if (status === "error") {
 				streamDeck.logger.error(`[camera:${actionId}] ${detail ?? "stream error"}`);
-				void this.safeSetImage(keyAction, renderPlaceholder(t("Camera\nError"), ERROR_COLOR), actionId);
+				const message = kind === "ffmpeg" ? t("ffmpeg\nMissing") : t("Camera\nError");
+				void this.safeSetImage(keyAction, renderPlaceholder(message, ERROR_COLOR), actionId);
 			}
 		});
 		stream.start();

@@ -79,6 +79,9 @@
 		"Connecting...": "Connexion...",
 		"Connection\nError": "Erreur de\nconnexion",
 		"Token\nError": "Erreur\nde jeton",
-		"No Data": "Aucune\ndonnée"
+		"No Data": "Aucune\ndonnée",
+		"Camera\nSetup": "Configurer\ncaméra",
+		"Camera\nError": "Erreur\ncaméra",
+		"ffmpeg\nMissing": "ffmpeg\nmanquant"
 	}
 }

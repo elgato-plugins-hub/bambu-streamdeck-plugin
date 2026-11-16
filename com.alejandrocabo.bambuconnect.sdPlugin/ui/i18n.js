@@ -19,6 +19,9 @@
 		"Connection\nError": "Error de\nconexión",
 		"Token\nError": "Error de\ntoken",
 		"No Data": "Sin datos",
+		"Camera\nSetup": "Configura\ncámara",
+		"Camera\nError": "Error de\ncámara",
+		"ffmpeg\nMissing": "Falta\nffmpeg",
 		"Sign In to Bambu Cloud": "Iniciar sesión en Bambu Cloud",
 		"Account Region": "Región de la cuenta",
 		"Bambu Lab Account Email": "Correo de la cuenta Bambu Lab",
@@ -69,9 +72,9 @@
 		"Snapshot Folder": "Carpeta de capturas",
 		"Default: Pictures/Bambu Camera": "Por defecto: Imágenes/Bambu Camera",
 		"ffmpeg Path (optional)": "Ruta de ffmpeg (opcional)",
-		"Uses the bundled ffmpeg by default": "Usa el ffmpeg incluido por defecto",
+		"Auto-detected by default": "Se detecta automáticamente por defecto",
 		"Camera setup help": "Ayuda para configurar la cámara",
-		"Enable LAN Mode Liveview on the printer (Settings > General) and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. Press the key to save a snapshot.": "Activa la vista en directo en modo LAN en la impresora (Ajustes > General) y usa la dirección IP y el código de acceso que muestra su pantalla. La impresora y este equipo deben estar en la misma red. Pulsa la tecla para guardar una captura."
+		"Enable LAN Only Liveview in the printer's LAN mode settings and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. ffmpeg must be installed (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg). Press the key to save a snapshot.": "Activa Liveview solo LAN en los ajustes del modo LAN de la impresora y usa la dirección IP y el código de acceso que muestra su pantalla. La impresora y este equipo deben estar en la misma red. Debes tener ffmpeg instalado (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg). Pulsa la tecla para guardar una captura."
 	},
 	"de": {
 		"Incorrect username or password": "Benutzername oder Passwort falsch",
@@ -91,6 +94,9 @@
 		"Connection\nError": "Verbindungs-\nfehler",
 		"Token\nError": "Token-\nFehler",
 		"No Data": "Keine Daten",
+		"Camera\nSetup": "Kamera\neinrichten",
+		"Camera\nError": "Kamera-\nfehler",
+		"ffmpeg\nMissing": "ffmpeg\nfehlt",
 		"Sign In to Bambu Cloud": "Bei Bambu Cloud anmelden",
 		"Account Region": "Kontoregion",
 		"Bambu Lab Account Email": "E-Mail des Bambu-Lab-Kontos",
@@ -141,9 +147,9 @@
 		"Snapshot Folder": "Ordner für Schnappschüsse",
 		"Default: Pictures/Bambu Camera": "Standard: Bilder/Bambu Camera",
 		"ffmpeg Path (optional)": "ffmpeg-Pfad (optional)",
-		"Uses the bundled ffmpeg by default": "Verwendet standardmäßig das mitgelieferte ffmpeg",
+		"Auto-detected by default": "Standardmäßig automatisch erkannt",
 		"Camera setup help": "Hilfe zur Kameraeinrichtung",
-		"Enable LAN Mode Liveview on the printer (Settings > General) and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. Press the key to save a snapshot.": "Aktiviere auf dem Drucker die LAN-Modus-Liveansicht (Einstellungen > Allgemein) und verwende die IP-Adresse und den Zugangscode von seinem Display. Drucker und Computer müssen im selben Netzwerk sein. Drücke die Taste, um einen Schnappschuss zu speichern."
+		"Enable LAN Only Liveview in the printer's LAN mode settings and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. ffmpeg must be installed (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg). Press the key to save a snapshot.": "Aktiviere in den LAN-Modus-Einstellungen des Druckers die Option „Nur LAN-Liveansicht“ und verwende die IP-Adresse und den Zugangscode von seinem Display. Drucker und Computer müssen im selben Netzwerk sein. ffmpeg muss installiert sein (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg). Drücke die Taste, um einen Schnappschuss zu speichern."
 	},
 	"fr": {
 		"Incorrect username or password": "Identifiant ou mot de passe incorrect",
@@ -163,6 +169,9 @@
 		"Connection\nError": "Erreur de\nconnexion",
 		"Token\nError": "Erreur\nde jeton",
 		"No Data": "Aucune\ndonnée",
+		"Camera\nSetup": "Configurer\ncaméra",
+		"Camera\nError": "Erreur\ncaméra",
+		"ffmpeg\nMissing": "ffmpeg\nmanquant",
 		"Sign In to Bambu Cloud": "Se connecter à Bambu Cloud",
 		"Account Region": "Région du compte",
 		"Bambu Lab Account Email": "E-mail du compte Bambu Lab",
@@ -213,9 +222,9 @@
 		"Snapshot Folder": "Dossier des captures",
 		"Default: Pictures/Bambu Camera": "Par défaut : Images/Bambu Camera",
 		"ffmpeg Path (optional)": "Chemin de ffmpeg (facultatif)",
-		"Uses the bundled ffmpeg by default": "Utilise par défaut le ffmpeg fourni",
+		"Auto-detected by default": "Détecté automatiquement par défaut",
 		"Camera setup help": "Aide pour la configuration de la caméra",
-		"Enable LAN Mode Liveview on the printer (Settings > General) and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. Press the key to save a snapshot.": "Activez la vue en direct en mode LAN sur l'imprimante (Paramètres > Général) et utilisez l'adresse IP et le code d'accès affichés sur son écran. L'imprimante et cet ordinateur doivent être sur le même réseau. Appuyez sur la touche pour enregistrer une capture."
+		"Enable LAN Only Liveview in the printer's LAN mode settings and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. ffmpeg must be installed (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg). Press the key to save a snapshot.": "Activez « LAN Only Liveview » dans les paramètres du mode LAN de l'imprimante et utilisez l'adresse IP et le code d'accès affichés sur son écran. L'imprimante et cet ordinateur doivent être sur le même réseau. ffmpeg doit être installé (Windows : winget install Gyan.FFmpeg ; macOS : brew install ffmpeg). Appuyez sur la touche pour enregistrer une capture."
 	}
 };
 	let table = {};

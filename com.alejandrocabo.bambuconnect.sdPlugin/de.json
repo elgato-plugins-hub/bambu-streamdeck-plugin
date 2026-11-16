@@ -79,6 +79,9 @@
 		"Connecting...": "Verbinde...",
 		"Connection\nError": "Verbindungs-\nfehler",
 		"Token\nError": "Token-\nFehler",
-		"No Data": "Keine Daten"
+		"No Data": "Keine Daten",
+		"Camera\nSetup": "Kamera\neinrichten",
+		"Camera\nError": "Kamera-\nfehler",
+		"ffmpeg\nMissing": "ffmpeg\nfehlt"
 	}
 }

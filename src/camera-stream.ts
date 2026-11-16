@@ -28,7 +28,8 @@ export interface CameraStreamOptions {
 
 export interface CameraStreamEvents {
 	frame: (jpeg: Buffer) => void;
-	status: (status: "connecting" | "streaming" | "error", detail?: string) => void;
+	/** `kind` tells an ffmpeg problem ("ffmpeg") from a stream/printer problem ("stream") when status is "error". */
+	status: (status: "connecting" | "streaming" | "error", detail?: string, kind?: "ffmpeg" | "stream") => void;
 }
 
 /** Host names and IPv4/IPv6 literals only: keeps unexpected characters out of the stream URL. */
@@ -41,12 +42,125 @@ export function bundledFfmpegPath(): string {
 	return path.join(process.cwd(), "bin", "ffmpeg", exe);
 }
 
-/** Resolves the ffmpeg executable: explicit setting, bundled binary, then whatever is on PATH. */
-export function resolveFfmpeg(explicit?: string): string {
-	if (explicit && explicit.trim()) return explicit.trim();
+/** Why ffmpeg could not be used: not installed/found, or found but unable to run (permissions, Gatekeeper, wrong architecture). */
+export class FfmpegError extends Error {
+	constructor(message: string, readonly kind: "missing" | "blocked") {
+		super(message);
+	}
+}
+
+/**
+ * Locations checked after the bundled binary. Apps started from the macOS Dock (such as Stream Deck) do not
+ * inherit the shell's PATH, so Homebrew's directories have to be tried explicitly.
+ */
+export function systemFfmpegCandidates(platform: NodeJS.Platform = process.platform): string[] {
+	switch (platform) {
+		case "darwin":
+			return ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/opt/local/bin/ffmpeg", "/usr/bin/ffmpeg"];
+		case "win32": {
+			// Common install locations (winget, Chocolatey, Scoop, manual). These work even before Stream Deck
+			// has been restarted to pick up a PATH change.
+			const local = process.env.LOCALAPPDATA;
+			const home = process.env.USERPROFILE;
+			const programData = process.env.ProgramData ?? "C:\\ProgramData";
+			return [
+				...(local ? [path.join(local, "Microsoft", "WinGet", "Links", "ffmpeg.exe")] : []),
+				path.join(programData, "chocolatey", "bin", "ffmpeg.exe"),
+				...(home ? [path.join(home, "scoop", "shims", "ffmpeg.exe")] : []),
+				"C:\\ffmpeg\\bin\\ffmpeg.exe",
+				"C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe",
+			];
+		}
+		default:
+			return ["/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
+	}
+}
+
+/** Candidate executables in priority order. An explicit path is never silently replaced by another one. */
+export function ffmpegCandidates(explicit?: string): string[] {
+	const chosen = explicit?.trim();
+	if (chosen) return [chosen];
+	const list: string[] = [];
 	const bundled = bundledFfmpegPath();
-	if (fs.existsSync(bundled)) return bundled;
-	return process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg";
+	if (fs.existsSync(bundled)) list.push(bundled);
+	list.push(...systemFfmpegCandidates());
+	list.push(process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg"); // whatever is on PATH
+	return list;
+}
+
+type ProbeFailure = { ok: false; kind: "missing" | "blocked"; detail: string };
+type Probe = { ok: true; version: string } | ProbeFailure;
+
+/** Runs `ffmpeg -version` to prove the executable exists and is allowed to run on this machine. */
+function probeFfmpeg(candidate: string): Promise<Probe> {
+	return new Promise((resolve) => {
+		if (path.isAbsolute(candidate) && !fs.existsSync(candidate)) {
+			resolve({ ok: false, kind: "missing", detail: `${candidate} does not exist` });
+			return;
+		}
+		let out = "";
+		let settled = false;
+		const done = (result: Probe) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timer);
+			resolve(result);
+		};
+		let proc: ChildProcess;
+		try {
+			proc = spawn(candidate, ["-version"], { stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
+		} catch (err) {
+			resolve({ ok: false, kind: "blocked", detail: (err as Error).message });
+			return;
+		}
+		const timer = setTimeout(() => {
+			proc.kill("SIGKILL");
+			done({ ok: false, kind: "blocked", detail: `${candidate} did not respond` });
+		}, 8_000);
+		proc.stdout?.on("data", (c: Buffer) => (out = (out + c.toString()).slice(0, 400)));
+		proc.on("error", (err) => {
+			const code = (err as NodeJS.ErrnoException).code;
+			done(code === "ENOENT" ? { ok: false, kind: "missing", detail: `${candidate} was not found` } : { ok: false, kind: "blocked", detail: `${candidate}: ${err.message}` });
+		});
+		proc.on("close", (code, signal) => {
+			if (code === 0 && /ffmpeg version/i.test(out)) done({ ok: true, version: out.split("\n")[0].trim() });
+			else done({ ok: false, kind: "blocked", detail: `${candidate} could not be run (${signal ?? `exit code ${code}`})` });
+		});
+	});
+}
+
+const resolved = new Map<string, string>();
+
+/**
+ * Finds a working ffmpeg: the explicit path, else the bundled binary, else the usual system locations, else PATH.
+ * Every candidate is probed, so permission problems, macOS Gatekeeper blocks and architecture mismatches are
+ * reported clearly instead of surfacing later as an unexplained stream failure.
+ */
+export async function findFfmpeg(explicit?: string): Promise<string> {
+	const key = explicit?.trim() ?? "";
+	const cached = resolved.get(key);
+	if (cached) return cached;
+
+	const problems: string[] = [];
+	let kind: "missing" | "blocked" = "missing";
+	for (const candidate of ffmpegCandidates(explicit)) {
+		const result = await probeFfmpeg(candidate);
+		if (result.ok) {
+			resolved.set(key, candidate);
+			return candidate;
+		}
+		const failure = result as ProbeFailure;
+		if (failure.kind === "blocked") kind = "blocked";
+		problems.push(failure.detail);
+	}
+	const install = process.platform === "darwin" ? "`brew install ffmpeg`" : process.platform === "win32" ? "`winget install Gyan.FFmpeg` (then restart Stream Deck)" : "your package manager";
+	const hint = ` Install it with ${install}, or set the ffmpeg path on the key.`;
+	throw new FfmpegError(`ffmpeg is ${kind === "blocked" ? "present but cannot run" : "not installed or not found"}.${hint} (${problems.join("; ")})`, kind);
+}
+
+/** Forgets a remembered ffmpeg location, for example after it was removed. */
+export function forgetFfmpeg(): void {
+	resolved.clear();
 }
 
 export function buildStreamUrl(host: string, accessCode: string): string {
@@ -131,10 +245,21 @@ export class CameraStream extends EventEmitter {
 	}
 
 	private launch(): void {
-		const { host, accessCode } = this.options;
-		const fps = Math.min(Math.max(this.options.fps ?? 3, 1), 10);
 		this.emit("status", "connecting");
 		this.lastStderr = "";
+		findFfmpeg(this.options.ffmpegPath).then(
+			(ffmpeg) => {
+				if (!this.stopped) this.spawnStream(ffmpeg);
+			},
+			(err: Error) => {
+				if (!this.stopped) this.fail(err.message, "ffmpeg");
+			},
+		);
+	}
+
+	private spawnStream(ffmpeg: string): void {
+		const { host, accessCode } = this.options;
+		const fps = Math.min(Math.max(this.options.fps ?? 3, 1), 10);
 
 		const input = this.options.inputOverride ?? [
 			"-timeout", String(IO_TIMEOUT_US),
@@ -148,8 +273,9 @@ export class CameraStream extends EventEmitter {
 
 		let proc: ChildProcess;
 		try {
-			proc = spawn(resolveFfmpeg(this.options.ffmpegPath), args, { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+			proc = spawn(ffmpeg, args, { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
 		} catch (err) {
+			forgetFfmpeg();
 			this.fail((err as Error).message);
 			return;
 		}
@@ -173,6 +299,7 @@ export class CameraStream extends EventEmitter {
 			this.lastStderr = (this.lastStderr + chunk.toString()).slice(-800);
 		});
 		proc.on("error", (err) => {
+			forgetFfmpeg();
 			this.lastStderr = (err as NodeJS.ErrnoException).code === "ENOENT" ? "ffmpeg was not found." : err.message;
 		});
 		proc.on("close", () => {
@@ -184,8 +311,8 @@ export class CameraStream extends EventEmitter {
 		});
 	}
 
-	private fail(detail: string): void {
-		this.emit("status", "error", redact(detail.trim(), this.options.accessCode));
+	private fail(detail: string, kind: "ffmpeg" | "stream" = "stream"): void {
+		this.emit("status", "error", redact(detail.trim(), this.options.accessCode), kind);
 		if (this.stopped) return;
 		const delay = this.retryMs;
 		this.retryMs = Math.min(this.retryMs * 2, MAX_RETRY_MS);
@@ -204,9 +331,10 @@ export async function saveSnapshot(options: Pick<CameraStreamOptions, "host" | "
 	const input = options.inputOverride ?? ["-timeout", String(IO_TIMEOUT_US), "-rtsp_transport", "tcp", "-i", buildStreamUrl(options.host, options.accessCode)];
 	const args = ["-hide_banner", "-loglevel", "error", "-y", ...input, "-frames:v", "1", "-q:v", "2", file];
 
+	const ffmpeg = await findFfmpeg(options.ffmpegPath);
 	return new Promise<string>((resolve, reject) => {
 		let stderr = "";
-		const proc = spawn(resolveFfmpeg(options.ffmpegPath), args, { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
+		const proc = spawn(ffmpeg, args, { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
 		const timer = setTimeout(() => proc.kill("SIGKILL"), 20_000);
 		proc.stderr?.on("data", (c: Buffer) => (stderr = (stderr + c.toString()).slice(-800)));
 		proc.on("error", (err) => {

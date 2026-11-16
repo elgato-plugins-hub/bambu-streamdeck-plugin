@@ -47,16 +47,25 @@
 2. Double-click `com.alejandrocabo.bambuconnect.streamDeckPlugin` to install it into Elgato Stream Deck.
 3. Open Stream Deck and drag any action from the **Bambu Connect** category onto your key grid.
 
+**Prerequisite for the Camera action (Windows and macOS):** install [`ffmpeg`](https://ffmpeg.org) first. The other actions do not need it.
+
+| Platform | Install command |
+| :--- | :--- |
+| **Windows** | `winget install Gyan.FFmpeg` (restart Stream Deck afterwards) |
+| **macOS** | `brew install ffmpeg` with [Homebrew](https://brew.sh) |
+
+The plugin finds `ffmpeg` automatically in the standard install locations (winget, Chocolatey, Scoop, Homebrew in `/opt/homebrew/bin` and `/usr/local/bin`, and your `PATH`). To use a specific build, set **ffmpeg Path** on the key.
+
 ---
 
 ## 🖥️ Supported Platforms
 
 | Platform | Status |
 | :--- | :--- |
-| **Windows 10+** | Supported and tested, including the Camera action. |
+| **Windows 10+** | Supported and tested, including the Camera action (requires `ffmpeg`). |
 | **macOS 10.15+** | Declared in the plugin manifest but **not tested**. The cloud-based keys (telemetry and Light Toggle) use no platform-specific code and are expected to work. |
 
-**Camera on macOS:** the bundled `ffmpeg` is built for the platform that builds the plugin, so the packaged plugin currently contains the Windows binary only. On a Mac, install `ffmpeg` yourself (for example `brew install ffmpeg`) and set the key's **ffmpeg Path** (typically `/opt/homebrew/bin/ffmpeg` on Apple Silicon or `/usr/local/bin/ffmpeg` on Intel). The camera also needs access to your local network, and macOS may ask you to allow it. This is untested.
+**Camera on macOS:** requires `ffmpeg` (see the prerequisite under [Installation](#-installation)). The key shows `ffmpeg Missing` if no working `ffmpeg` is found, and the plugin log says whether it is missing or blocked from running. The camera also needs access to your local network, and macOS may ask you to allow it. This is untested.
 
 ---
 
@@ -85,12 +94,12 @@ Details of failed requests are written to the plugin log (`com.alejandrocabo.bam
 
 The **Camera** action shows a live thumbnail from the printer's built-in camera and saves a snapshot when pressed. Unlike the other keys it does not use Bambu Cloud: it connects directly to the printer over your local network, so the printer and computer must be on the same network.
 
-1. On the printer, enable **LAN Mode Liveview** (Settings > General) and note the **IP address** and **LAN access code** shown on its screen.
+1. On the printer, enable **LAN Only Liveview** in the LAN mode settings and note the **IP address** and **LAN access code** shown on its screen.
 2. Add the **Camera** action to a key and enter the IP address and access code in the Property Inspector.
 3. The key starts showing the live view (about 3 frames per second by default). Press it to save a full-resolution JPEG to the snapshot folder (default `Pictures/Bambu Camera`).
 
 Notes:
-- Video is decoded by `ffmpeg`, which is bundled with the plugin. To use your own build, set **ffmpeg Path** on the key.
+- Video is decoded by `ffmpeg`, which you install yourself (see [Installation](#-installation)). The plugin tries the key's **ffmpeg Path**, then a bundled copy if the plugin was built with one, then the standard system locations, then your `PATH`, and checks that the one it picks can actually run.
 - The stream uses RTSPS on port 322 with the printer's self-signed certificate, as supported by X1, H2 and X2 series printers. Printers that use the older port-6000 camera protocol (P1P, P1S, A1) are not supported yet.
 - The access code is stored in the key's settings and is never written to the plugin log.
 
@@ -112,7 +121,7 @@ cd bambu-streamdeck-plugin
 # Install dependencies
 npm install
 
-# Build Rollup bundle (also copies the bundled ffmpeg into the plugin folder)
+# Build Rollup bundle
 npm run build
 
 # Validate plugin schema
@@ -122,7 +131,14 @@ npx streamdeck validate com.alejandrocabo.bambuconnect.sdPlugin
 npx streamdeck pack com.alejandrocabo.bambuconnect.sdPlugin --force
 ```
 
-The build copies the `ffmpeg` binary that `ffmpeg-static` installs for the **current** platform into `com.alejandrocabo.bambuconnect.sdPlugin/bin/ffmpeg/` (it is git-ignored, about 80 MB). Build and pack on each platform you want to ship.
+The default build does **not** include `ffmpeg`. To make a package that bundles it (for example a private Windows build), install the optional helper and use the bundled scripts:
+
+```bash
+npm install --no-save ffmpeg-static
+npm run build:bundled      # or: npm run pack:bundled
+```
+
+This copies the `ffmpeg` binary for the **current** platform into `com.alejandrocabo.bambuconnect.sdPlugin/bin/ffmpeg/` (git-ignored, about 80 MB), so build on each platform you want to ship.
 
 ---
 
@@ -130,4 +146,4 @@ The build copies the `ffmpeg` binary that `ffmpeg-static` installs for the **cur
 
 Distributed under the MIT License. See `LICENSE` for details.
 
-The Camera action bundles `ffmpeg` through [`ffmpeg-static`](https://github.com/eugeneware/ffmpeg-static). The downloaded builds are GPL-licensed, so distributing a plugin package that includes them carries FFmpeg's license obligations (see [ffmpeg.org/legal.html](https://ffmpeg.org/legal.html)).
+`ffmpeg` is not distributed with the plugin by default. If you build with `npm run build:bundled`, the `ffmpeg-static` builds it includes are GPL-licensed, so distributing that package carries FFmpeg's license obligations (see [ffmpeg.org/legal.html](https://ffmpeg.org/legal.html)).
