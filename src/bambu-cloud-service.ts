@@ -2,6 +2,7 @@ import streamDeck from "@elgato/streamdeck";
 import mqtt, { MqttClient } from "mqtt";
 import { EventEmitter } from "node:events";
 import { randomBytes } from "node:crypto";
+import { decodeLegacyTray, decodeNozzleTray } from "./ams";
 import {
 	AmsState,
 	AmsTray,
@@ -9,12 +10,15 @@ import {
 	BambuCloudServiceOptions,
 	BambuTelemetry,
 	CloudRegion,
+	ActiveFilament,
 	GcodeState,
+	NozzleReading,
+	NozzleSide,
 } from "./types";
 
 const BAMBU_PORT = 8883;
 const BAMBU_CLOUD_KEEPALIVE = 30;
-const AMS_TRAYS_PER_UNIT = 4;
+const NOZZLE_BY_INDEX: Record<number, NozzleSide> = { 0: "right", 1: "left" };
 
 function brokerHost(region: CloudRegion): string {
 	return region === "cn" ? "cn.mqtt.bambulab.com" : "us.mqtt.bambulab.com";
@@ -82,6 +86,11 @@ async function fetchUserIdFromProfile(token: string, region: CloudRegion): Promi
 	}
 }
 
+/** Splits a packed temperature word: low 16 bits are the current value, high 16 bits the target. */
+export function unpackTemperature(packed: number): NozzleReading {
+	return { tempC: packed & 0xffff, targetC: (packed >>> 16) & 0xffff };
+}
+
 function parseGcodeState(raw: unknown): GcodeState | null {
 	switch (raw) {
 		case "IDLE":
@@ -114,9 +123,9 @@ function formatColorHex(raw: unknown): string | null {
 	return `#${clean}`;
 }
 
-function parseAms(printObj: Record<string, any>): AmsState | null {
+function parseAms(printObj: Record<string, any>): { units: AmsUnit[]; externalSpools: Array<AmsState["externalSpools"][number] | undefined> } | null {
 	const amsRoot = printObj.ams || printObj.ams_status;
-	if (!amsRoot && !printObj.vt_tray) return null;
+	if (!amsRoot && !printObj.vt_tray && !printObj.vir_slot) return null;
 
 	const unitsRaw: any[] = Array.isArray(amsRoot?.ams) ? amsRoot.ams : [];
 	const units: AmsUnit[] = unitsRaw.map((u) => {
@@ -125,33 +134,40 @@ function parseAms(printObj: Record<string, any>): AmsState | null {
 			const color = formatColorHex(t.tray_color || (Array.isArray(t.cols) && t.cols.length > 0 ? t.cols[0] : null));
 			const type: string | null = present ? t.tray_sub_brands || t.tray_type : null;
 			const remainRaw = t.remain !== undefined ? Number(t.remain) : -1;
+			// Incremental updates may list a tray with only some fields (for example just `remain`); remember
+			// whether this entry actually describes the filament so a partial entry cannot blank a loaded slot.
+			const hasInfo = t.tray_type !== undefined || t.tray_color !== undefined || t.tray_sub_brands !== undefined;
 			return {
 				index: t.id !== undefined ? Number(t.id) : i,
 				present,
 				type,
 				color,
 				remainPercent: remainRaw > 0 ? remainRaw : null,
-			};
+				hasInfo,
+			} as AmsTray & { hasInfo: boolean };
 		});
 
 		const humidityVal = u.humidity !== undefined ? Number(u.humidity) : (amsRoot?.humidity !== undefined ? Number(amsRoot.humidity) : null);
+
+		// `info` is a hex string; bits 8-11 say which nozzle the unit feeds (0 = right, 1 = left).
+		let nozzle: NozzleSide | null = null;
+		if (u.info !== undefined && u.info !== null) {
+			const info = typeof u.info === "string" ? parseInt(u.info, 16) : Number(u.info);
+			if (Number.isFinite(info)) nozzle = NOZZLE_BY_INDEX[(info >> 8) & 0xf] ?? null;
+		}
+
 		return {
 			id: u.id !== undefined ? Number(u.id) : -1,
 			humidityPercent: humidityVal !== null && !isNaN(humidityVal) ? humidityVal : null,
 			tempC: u.temp !== undefined ? Number(u.temp) : null,
 			trays,
+			nozzle,
 		};
 	});
 
-	const trayNowRaw = amsRoot?.tray_now !== undefined ? Number(amsRoot.tray_now) : (printObj.tray_now !== undefined ? Number(printObj.tray_now) : null);
-	let activeTrayIndex: number | null = null;
-	if (trayNowRaw !== null && trayNowRaw >= 0 && trayNowRaw < AMS_TRAYS_PER_UNIT * (units.length || 1)) {
-		activeTrayIndex = trayNowRaw;
-	}
-
-	const vt = printObj.vt_tray;
-	const externalSpoolActive = trayNowRaw === 254;
-	const externalSpool: AmsState["externalSpool"] =
+	// External spools: dual-nozzle printers send vir_slot[] (id 255 = first spool, id 254 = second); older printers
+	// send a single vt_tray, which is the first spool.
+	const parseSpool = (vt: any): AmsState["externalSpools"][number] =>
 		vt && typeof vt.tray_type === "string" && vt.tray_type.length > 0
 			? {
 					present: true,
@@ -159,8 +175,18 @@ function parseAms(printObj: Record<string, any>): AmsState | null {
 					color: formatColorHex(vt.tray_color || (Array.isArray(vt.cols) && vt.cols.length > 0 ? vt.cols[0] : null)),
 			  }
 			: null;
+	const externalSpools: Array<AmsState["externalSpools"][number] | undefined> = [undefined, undefined];
+	if (Array.isArray(printObj.vir_slot)) {
+		for (const slot of printObj.vir_slot) {
+			const id = Number(slot?.id);
+			if (id === 255) externalSpools[0] = parseSpool(slot);
+			else if (id === 254) externalSpools[1] = parseSpool(slot);
+		}
+	} else if (printObj.vt_tray) {
+		externalSpools[0] = parseSpool(printObj.vt_tray);
+	}
 
-	return { present: true, units, activeTrayIndex, externalSpoolActive, externalSpool };
+	return { units, externalSpools };
 }
 
 export class BambuCloudService extends EventEmitter {
@@ -169,6 +195,16 @@ export class BambuCloudService extends EventEmitter {
 	/** Light node reported by the printer (chamber_light, work_light...), used for ledctrl commands. */
 	private lightNode = "chamber_light";
 	private ledSeq = 2000;
+	/** Set once the printer reports more than one extruder; the legacy single-nozzle fields then stop being trusted. */
+	private dualNozzle = false;
+	private nozzleReadings: Record<NozzleSide, NozzleReading> = {
+		right: { tempC: null, targetC: null },
+		left: { tempC: null, targetC: null },
+	};
+	private activeNozzle: NozzleSide | null = null;
+	/** Per-nozzle `snow` values (loaded AMS slot); once seen they replace the legacy tray_now field. */
+	private nozzleSnow: Record<NozzleSide, number | null> = { right: null, left: null };
+	private hasNozzleSnow = false;
 	private client: MqttClient | null = null;
 	private pushallSeq = 0;
 	private pushallTimer: NodeJS.Timeout | null = null;
@@ -199,6 +235,7 @@ export class BambuCloudService extends EventEmitter {
 			subtaskName: null,
 			nozzleTempC: null,
 			nozzleTargetC: null,
+			nozzles: null,
 			bedTempC: null,
 			bedTargetC: null,
 			chamberTempC: null,
@@ -304,8 +341,13 @@ export class BambuCloudService extends EventEmitter {
 			if (typeof print.subtask_name === "string" && print.subtask_name) this.cumulativeTelemetry.subtaskName = print.subtask_name;
 			if (print.spd_lvl !== undefined) this.cumulativeTelemetry.speedLevel = Number(print.spd_lvl);
 
-			if (typeof print.nozzle_temper === "number") this.cumulativeTelemetry.nozzleTempC = print.nozzle_temper;
-			if (typeof print.nozzle_target_temper === "number") this.cumulativeTelemetry.nozzleTargetC = print.nozzle_target_temper;
+			this.parseExtruders(print);
+			// On dual-nozzle printers the legacy fields only describe whichever nozzle is active, so they must not
+			// overwrite the per-nozzle readings.
+			if (!this.dualNozzle) {
+				if (typeof print.nozzle_temper === "number") this.cumulativeTelemetry.nozzleTempC = print.nozzle_temper;
+				if (typeof print.nozzle_target_temper === "number") this.cumulativeTelemetry.nozzleTargetC = print.nozzle_target_temper;
+			}
 			if (typeof print.bed_temper === "number") this.cumulativeTelemetry.bedTempC = print.bed_temper;
 			if (typeof print.bed_target_temper === "number") this.cumulativeTelemetry.bedTargetC = print.bed_target_temper;
 
@@ -314,33 +356,7 @@ export class BambuCloudService extends EventEmitter {
 			if (print.big_fan2_speed !== undefined) this.cumulativeTelemetry.fans.chamberPercent = fanPercent(print.big_fan2_speed);
 			if (print.heatbreak_fan_speed !== undefined) this.cumulativeTelemetry.fans.heatbreakPercent = fanPercent(print.heatbreak_fan_speed);
 
-			const amsParsed = parseAms(print);
-			if (amsParsed) {
-				if (!this.cumulativeTelemetry.ams) {
-					this.cumulativeTelemetry.ams = amsParsed;
-				} else {
-					if (amsParsed.units && amsParsed.units.length > 0) {
-						amsParsed.units.forEach((newUnit, uIdx) => {
-							const existingUnit = this.cumulativeTelemetry.ams!.units[uIdx];
-							if (!existingUnit) {
-								this.cumulativeTelemetry.ams!.units[uIdx] = newUnit;
-							} else {
-								if (newUnit.humidityPercent !== null && newUnit.humidityPercent !== undefined) {
-									existingUnit.humidityPercent = newUnit.humidityPercent;
-								}
-								if (newUnit.tempC !== null && newUnit.tempC !== undefined) {
-									existingUnit.tempC = newUnit.tempC;
-								}
-								if (newUnit.trays && newUnit.trays.length > 0) {
-									existingUnit.trays = newUnit.trays;
-								}
-							}
-						});
-					}
-					if (amsParsed.activeTrayIndex !== null) this.cumulativeTelemetry.ams.activeTrayIndex = amsParsed.activeTrayIndex;
-					if (amsParsed.externalSpool) this.cumulativeTelemetry.ams.externalSpool = amsParsed.externalSpool;
-				}
-			}
+			this.updateAms(print);
 
 			const rawChamber =
 				print.chamber_temper ??
@@ -374,6 +390,102 @@ export class BambuCloudService extends EventEmitter {
 
 			this.emit("telemetry", { ...this.cumulativeTelemetry });
 		});
+	}
+
+	/**
+	 * Reads device.extruder: `info[]` has one entry per nozzle (id 0 = right, id 1 = left) whose `temp` packs the
+	 * current temperature in the low 16 bits and the target in the high 16 bits; `state` holds the extruder count
+	 * in its low 4 bits and the active nozzle in the next 4 (15 while switching).
+	 */
+	/** Merges AMS units (by unit id), external spools and the active filament into the running telemetry. */
+	private updateAms(print: any): void {
+		const parsed = parseAms(print);
+
+		let active: ActiveFilament | null | undefined; // undefined = this message says nothing about it
+		if (this.hasNozzleSnow) {
+			const snow = this.nozzleSnow[this.activeNozzle ?? "right"];
+			if (snow !== null) active = decodeNozzleTray(snow);
+		} else {
+			const trayNow = print.ams?.tray_now ?? print.tray_now;
+			if (trayNow !== undefined && trayNow !== null) active = decodeLegacyTray(Number(trayNow));
+		}
+
+		if (!parsed && active === undefined) return;
+
+		const ams = (this.cumulativeTelemetry.ams ??= { present: true, units: [], active: null, externalSpools: [null, null] });
+		if (parsed) {
+			for (const unit of parsed.units) {
+				const existing = ams.units.find((u) => u.id === unit.id);
+				if (!existing) {
+					ams.units.push({ ...unit, trays: (unit.trays as Array<AmsTray & { hasInfo?: boolean }>).map(({ hasInfo, ...tray }) => tray) });
+					continue;
+				}
+				if (unit.humidityPercent !== null) existing.humidityPercent = unit.humidityPercent;
+				if (unit.tempC !== null) existing.tempC = unit.tempC;
+				if (unit.nozzle !== null) existing.nozzle = unit.nozzle;
+				for (const incoming of unit.trays as Array<AmsTray & { hasInfo?: boolean }>) {
+					const { hasInfo, ...tray } = incoming;
+					const at = existing.trays.findIndex((tr) => tr.index === tray.index);
+					if (at < 0) existing.trays.push(tray);
+					else if (hasInfo) existing.trays[at] = tray;
+					else if (tray.remainPercent !== null) existing.trays[at] = { ...existing.trays[at], remainPercent: tray.remainPercent };
+				}
+				existing.trays.sort((a, b) => a.index - b.index);
+			}
+			ams.units.sort((a, b) => a.id - b.id);
+			parsed.externalSpools.forEach((spool, i) => {
+				if (spool !== undefined) ams.externalSpools[i] = spool;
+			});
+		}
+		if (active !== undefined) ams.active = active;
+	}
+
+	private parseExtruders(print: any): void {
+		const extruder = print?.device?.extruder;
+		if (!extruder) return;
+
+		const info: any[] = Array.isArray(extruder.info) ? extruder.info : [];
+		const state = typeof extruder.state === "number" ? extruder.state : null;
+		if (info.length >= 2 || (state !== null && (state & 0xf) >= 2)) this.dualNozzle = true;
+
+		const sides: Record<number, NozzleSide> = { 0: "right", 1: "left" };
+		for (const entry of info) {
+			const side = sides[entry?.id as number];
+			if (!side || typeof entry.temp !== "number") continue;
+			this.nozzleReadings[side] = unpackTemperature(entry.temp);
+		}
+		for (const entry of info) {
+			const side = sides[entry?.id as number];
+			if (side && typeof entry.snow === "number") {
+				this.nozzleSnow[side] = entry.snow;
+				this.hasNozzleSnow = true;
+			}
+		}
+
+		if (state !== null) {
+			const index = (state >> 4) & 0xf;
+			if (index === 0 || index === 1) this.activeNozzle = sides[index];
+		}
+
+		if (!this.dualNozzle) {
+			// Newer firmware reports even a single nozzle here.
+			const only = this.nozzleReadings.right;
+			if (only.tempC !== null) {
+				this.cumulativeTelemetry.nozzleTempC = only.tempC;
+				this.cumulativeTelemetry.nozzleTargetC = only.targetC;
+			}
+			return;
+		}
+
+		const active = this.activeNozzle ?? "right";
+		this.cumulativeTelemetry.nozzles = {
+			dual: true,
+			active: this.activeNozzle,
+			left: { ...this.nozzleReadings.left },
+			right: { ...this.nozzleReadings.right },
+		};
+		this.cumulativeTelemetry.nozzleTempC = this.nozzleReadings[active].tempC;
+		this.cumulativeTelemetry.nozzleTargetC = this.nozzleReadings[active].targetC;
 	}
 
 	requestPushAll(): void {

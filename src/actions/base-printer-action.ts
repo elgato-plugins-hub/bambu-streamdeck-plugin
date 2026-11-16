@@ -36,6 +36,8 @@ export interface Connection {
 	key: string;
 	lastTelemetry: BambuTelemetry | null;
 	viewIndex: number;
+	/** Latest settings of the key, so renderers can use per-key options (AMS unit, external spool...). */
+	settings: BaseActionSettings;
 }
 
 export abstract class BasePrinterAction<TSettings extends BaseActionSettings = BaseActionSettings> extends SingletonAction<TSettings> {
@@ -180,6 +182,7 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 		}
 
 		if (existing?.key === key) {
+			existing.settings = settings;
 			await this.safeSetImage(keyAction, this.renderTelemetryImage(existing.lastTelemetry, existing), actionId);
 			return;
 		}
@@ -194,7 +197,7 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 			userId,
 			debug: true,
 		});
-		const conn: Connection = { service, key, lastTelemetry: null, viewIndex: 0 };
+		const conn: Connection = { service, key, lastTelemetry: null, viewIndex: 0, settings };
 		BasePrinterAction.connections.set(actionId, conn);
 
 		service.on("telemetry", (t: BambuTelemetry) => {
