@@ -36,6 +36,7 @@
 | **AMS Slot A1–A4** | Individual spool color, material, and `IN USE` status. |
 | **External Spool** | Rear external spool filament color and active state. |
 | **Print Time & Layers** | Remaining time, elapsed time, and layer count (`X/Y`). |
+| **Light Toggle** | Printer light state (`ON` / `OFF`). Press to switch the light on or off. |
 
 ---
 
@@ -44,6 +45,16 @@
 1. Download the latest `.streamDeckPlugin` release from the [Releases](https://github.com/Alejandrokbo/bambu-streamdeck-plugin/releases) section.
 2. Double-click `com.alejandrocabo.bambuconnect.streamDeckPlugin` to install it into Elgato Stream Deck.
 3. Open Stream Deck and drag any action from the **Bambu Connect** category onto your key grid.
+
+---
+
+## 🖥️ Supported Platforms
+
+| Platform | Status |
+| :--- | :--- |
+| **Windows 10+** | Supported and tested. |
+| **macOS 10.15+** | Declared in the plugin manifest but **not tested**. The cloud-based keys (telemetry and Light Toggle) use no platform-specific code and are expected to work. |
+
 
 ---
 

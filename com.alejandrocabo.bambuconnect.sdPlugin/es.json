@@ -52,6 +52,10 @@
 		{
 			"Name": "Tiempo y capas de impresión",
 			"Tooltip": "Muestra el tiempo restante, el tiempo transcurrido y el progreso de capas."
+		},
+		{
+			"Name": "Luz de la impresora",
+			"Tooltip": "Muestra el estado de la luz de la impresora. Pulsa para encenderla o apagarla."
 		}
 	],
 	"Localization": {

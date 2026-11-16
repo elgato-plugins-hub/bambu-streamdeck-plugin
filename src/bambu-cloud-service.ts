@@ -166,6 +166,9 @@ function parseAms(printObj: Record<string, any>): AmsState | null {
 export class BambuCloudService extends EventEmitter {
 	private readonly options: Required<Omit<BambuCloudServiceOptions, "userId">>;
 	private userId: string | null;
+	/** Light node reported by the printer (chamber_light, work_light...), used for ledctrl commands. */
+	private lightNode = "chamber_light";
+	private ledSeq = 2000;
 	private client: MqttClient | null = null;
 	private pushallSeq = 0;
 	private pushallTimer: NodeJS.Timeout | null = null;
@@ -360,6 +363,15 @@ export class BambuCloudService extends EventEmitter {
 				}
 			}
 
+			if (Array.isArray(print.lights_report)) {
+				const lights = print.lights_report as Array<{ node?: string; mode?: string }>;
+				const main = lights.find((l) => l?.node === "chamber_light") ?? lights.find((l) => l?.node === "work_light") ?? lights.find((l) => typeof l?.node === "string");
+				if (main?.node) {
+					this.lightNode = main.node;
+					this.cumulativeTelemetry.lightOn = main.mode === "on" || main.mode === "flashing" || main.mode === "flash";
+				}
+			}
+
 			this.emit("telemetry", { ...this.cumulativeTelemetry });
 		});
 	}
@@ -375,6 +387,30 @@ export class BambuCloudService extends EventEmitter {
 		});
 		this.client.publish(topic, payload);
 		this.log("pushall sent");
+	}
+
+	/** Switches the printer light on or off (chamber light, or work light on printers without one). */
+	setLight(on: boolean): boolean {
+		if (!this.client?.connected) return false;
+		const topic = `device/${this.options.deviceSerial}/request`;
+		const payload = JSON.stringify({
+			system: {
+				sequence_id: String(this.ledSeq++),
+				command: "ledctrl",
+				led_node: this.lightNode,
+				led_mode: on ? "on" : "off",
+				led_on_time: 500,
+				led_off_time: 500,
+				loop_times: 0,
+				interval_time: 0,
+			},
+		});
+		this.client.publish(topic, payload);
+		this.log(`ledctrl ${this.lightNode} ${on ? "on" : "off"} sent`);
+		// Optimistic update so the key responds immediately; the next printer report confirms it.
+		this.cumulativeTelemetry.lightOn = on;
+		this.emit("telemetry", { ...this.cumulativeTelemetry });
+		return true;
 	}
 
 	disconnect(): void {

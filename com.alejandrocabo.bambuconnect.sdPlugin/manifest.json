@@ -221,6 +221,21 @@
 					"Image": "imgs/actions/print-status/icon"
 				}
 			]
+		},
+		{
+			"UUID": "com.alejandrocabo.bambuconnect.light-toggle",
+			"Name": "Light Toggle",
+			"Tooltip": "Shows the printer light state. Press to switch the light on or off.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/print-status.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
 		}
 	]
 }

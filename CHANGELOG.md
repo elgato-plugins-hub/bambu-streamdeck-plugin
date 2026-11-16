@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Light Toggle action**: a key that shows whether the printer light is on or off and switches it when pressed
+  (`ledctrl` over the existing Bambu Cloud MQTT connection). The service now also reads `lights_report`, so the
+  light state is available to the plugin. Includes Spanish, German and French strings.
 - **Manual printer serial and Bambu user ID fields** in the Property Inspector. They let a key connect when
   Bambu's REST API refuses the printer-list or profile lookups (for example a Cloudflare `403` block), which
   previously left the plugin unable to find any printer or resolve the account's user ID.
@@ -20,6 +23,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   instead of relying on the login request to send it.
 
 ### Changed
+- The client headers sent to the Bambu API now report the real operating system and version instead of a
+  hardcoded Windows value.
+- README documents supported platforms: Windows is tested; macOS is declared in the manifest but untested.
 - Status messages, errors and debug logs that were hardcoded in Spanish are now English by default and
   translated through the new localization layer.
 - A failed printer-list request is no longer swallowed after sign-in; the error is logged and the Property

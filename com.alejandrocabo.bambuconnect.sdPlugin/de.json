@@ -52,6 +52,10 @@
 		{
 			"Name": "Druckzeit und Schichten",
 			"Tooltip": "Zeigt die verbleibende Zeit, die vergangene Zeit und den Schichtfortschritt an."
+		},
+		{
+			"Name": "Druckerlicht",
+			"Tooltip": "Zeigt den Zustand des Druckerlichts an. Drücken, um das Licht ein- oder auszuschalten."
 		}
 	],
 	"Localization": {
