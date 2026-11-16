@@ -13,6 +13,8 @@ import { AmsSlot4 } from "./actions/ams-slot-4";
 import { AmsExternal } from "./actions/ams-external";
 import { FanSpeed } from "./actions/fan-speed";
 import { SubtaskInfo } from "./actions/subtask-info";
+import { Camera } from "./actions/camera";
+import { LightToggle } from "./actions/light-toggle";
 
 streamDeck.logger.setLevel("info");
 
@@ -36,5 +38,7 @@ streamDeck.actions.registerAction(new AmsExternal());
 streamDeck.actions.registerAction(new FanSpeed());
 streamDeck.actions.registerAction(new SubtaskInfo());
 streamDeck.actions.registerAction(new PrintTime());
+streamDeck.actions.registerAction(new Camera());
+streamDeck.actions.registerAction(new LightToggle());
 
 streamDeck.connect();

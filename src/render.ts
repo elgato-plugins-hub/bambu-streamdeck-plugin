@@ -336,6 +336,25 @@ export function renderSubtaskView(t: BambuTelemetry): string {
 	`);
 }
 
+export function renderLightView(t: BambuTelemetry): string {
+	const on = t.lightOn === true;
+	const known = t.lightOn !== null && t.lightOn !== undefined;
+	const bulb = on ? "#ffd23b" : "#5b6472";
+	const rays = on
+		? `<g stroke="#ffd23b" stroke-width="4" stroke-linecap="round">
+			<line x1="72" y1="26" x2="72" y2="34"/><line x1="40" y1="42" x2="46" y2="48"/><line x1="104" y1="42" x2="98" y2="48"/>
+			<line x1="32" y1="66" x2="40" y2="66"/><line x1="112" y1="66" x2="104" y2="66"/></g>`
+		: "";
+	const label = known ? (on ? "ON" : "OFF") : "--";
+	return frame(`
+		${centerLabel("LIGHT", 22, 16, MUTED, "800")}
+		${rays}
+		<circle cx="72" cy="64" r="22" fill="${on ? bulb : "none"}" stroke="${bulb}" stroke-width="4.5"/>
+		<rect x="62" y="86" width="20" height="9" rx="3" fill="none" stroke="${bulb}" stroke-width="3.5"/>
+		${centerLabel(label, 128, 30, on ? "#ffd23b" : TEXT, "900")}
+	`);
+}
+
 export function renderPlaceholder(message: string, color: string = MUTED): string {
 	const lines = message.split("\n");
 	const startY = lines.length > 1 ? 90 : 105;
