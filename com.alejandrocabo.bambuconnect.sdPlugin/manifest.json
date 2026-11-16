@@ -223,6 +223,21 @@
 			]
 		},
 		{
+			"UUID": "com.alejandrocabo.bambuconnect.camera",
+			"Name": "Camera",
+			"Tooltip": "Shows a live thumbnail from the printer's camera (LAN). Press to save a snapshot.",
+			"Icon": "imgs/actions/print-status/icon",
+			"PropertyInspectorPath": "ui/camera.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/print-status/icon"
+				}
+			]
+		},
+		{
 			"UUID": "com.alejandrocabo.bambuconnect.light-toggle",
 			"Name": "Light Toggle",
 			"Tooltip": "Shows the printer light state. Press to switch the light on or off.",

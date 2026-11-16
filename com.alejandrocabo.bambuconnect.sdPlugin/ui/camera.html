@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Bambu Connect Camera</title>
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+    <script src="i18n.js"></script>
+</head>
+
+<body>
+    <sdpi-item label="Printer IP Address" data-i18n-label="Printer IP Address">
+        <sdpi-textfield setting="printerIp" placeholder="e.g. 192.168.1.50" data-i18n-placeholder="e.g. 192.168.1.50"></sdpi-textfield>
+    </sdpi-item>
+    <sdpi-item label="LAN Access Code" data-i18n-label="LAN Access Code">
+        <sdpi-password setting="accessCode" placeholder="8 characters" data-i18n-placeholder="8 characters"></sdpi-password>
+    </sdpi-item>
+    <sdpi-item label="Frame Rate" data-i18n-label="Frame Rate">
+        <sdpi-select setting="frameRate" default="3">
+            <option value="1">1 fps</option>
+            <option value="2">2 fps</option>
+            <option value="3">3 fps</option>
+            <option value="5">5 fps</option>
+        </sdpi-select>
+    </sdpi-item>
+    <sdpi-item label="Snapshot Folder" data-i18n-label="Snapshot Folder">
+        <sdpi-textfield setting="snapshotFolder" placeholder="Default: Pictures/Bambu Camera" data-i18n-placeholder="Default: Pictures/Bambu Camera"></sdpi-textfield>
+    </sdpi-item>
+    <sdpi-item label="ffmpeg Path (optional)" data-i18n-label="ffmpeg Path (optional)">
+        <sdpi-textfield setting="ffmpegPath" placeholder="Auto-detected by default" data-i18n-placeholder="Auto-detected by default"></sdpi-textfield>
+    </sdpi-item>
+    <sdpi-item>
+        <details>
+            <summary data-i18n="Camera setup help">Camera setup help</summary>
+            <p data-i18n="Enable LAN Only Liveview in the printer's LAN mode settings and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. ffmpeg must be installed (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg). Press the key to save a snapshot.">Enable LAN Only Liveview in the printer's LAN mode settings and use the IP address and access code shown on its screen. The printer and this computer must be on the same network. ffmpeg must be installed (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg). Press the key to save a snapshot.</p>
+        </details>
+    </sdpi-item>
+
+    <script>
+        (async function () {
+            let info = null;
+            try {
+                info = await window.SDPIComponents.streamDeckClient.getConnectionInfo();
+            } catch (e) {}
+            const language = (info && info.info && info.info.application && info.info.application.language) || navigator.language || "en";
+            initI18n({ application: { language: String(language).replace("-", "_") } });
+        })();
+    </script>
+</body>
+
+</html>

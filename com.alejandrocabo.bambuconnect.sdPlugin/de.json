@@ -54,6 +54,10 @@
 			"Tooltip": "Zeigt die verbleibende Zeit, die vergangene Zeit und den Schichtfortschritt an."
 		},
 		{
+			"Name": "Kamera",
+			"Tooltip": "Zeigt eine Live-Vorschau der Druckerkamera (LAN). Drücken, um einen Schnappschuss zu speichern."
+		},
+		{
 			"Name": "Druckerlicht",
 			"Tooltip": "Zeigt den Zustand des Druckerlichts an. Drücken, um das Licht ein- oder auszuschalten."
 		}
@@ -75,6 +79,9 @@
 		"Connecting...": "Verbinde...",
 		"Connection\nError": "Verbindungs-\nfehler",
 		"Token\nError": "Token-\nFehler",
-		"No Data": "Keine Daten"
+		"No Data": "Keine Daten",
+		"Camera\nSetup": "Kamera\neinrichten",
+		"Camera\nError": "Kamera-\nfehler",
+		"ffmpeg\nMissing": "ffmpeg\nfehlt"
 	}
 }

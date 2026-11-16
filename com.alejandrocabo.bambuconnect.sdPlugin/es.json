@@ -54,6 +54,10 @@
 			"Tooltip": "Muestra el tiempo restante, el tiempo transcurrido y el progreso de capas."
 		},
 		{
+			"Name": "Cámara",
+			"Tooltip": "Muestra una miniatura en directo de la cámara de la impresora (LAN). Pulsa para guardar una captura."
+		},
+		{
 			"Name": "Luz de la impresora",
 			"Tooltip": "Muestra el estado de la luz de la impresora. Pulsa para encenderla o apagarla."
 		}
@@ -75,6 +79,9 @@
 		"Connecting...": "Conectando...",
 		"Connection\nError": "Error de\nconexión",
 		"Token\nError": "Error de\ntoken",
-		"No Data": "Sin datos"
+		"No Data": "Sin datos",
+		"Camera\nSetup": "Configura\ncámara",
+		"Camera\nError": "Error de\ncámara",
+		"ffmpeg\nMissing": "Falta\nffmpeg"
 	}
 }
