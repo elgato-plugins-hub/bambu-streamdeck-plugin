@@ -1,5 +1,10 @@
 import type { CloudRegion } from "./types";
 
+// Bambu Lab asks third-party software to identify itself with its own name instead of
+// impersonating Bambu Studio / OrcaSlicer. Since 2026-11-10 their Cloudflare WAF blocks
+// requests carrying the old "bambu_network_agent/01.09.x" + "OrcaSlicer" identity.
+export const CLIENT_USER_AGENT = "BambuConnect-StreamDeck/1.1.3";
+
 const WEB_ORIGIN = "https://bambulab.com";
 const CSRF_URL = `${WEB_ORIGIN}/api/csrf`;
 const TFA_URL = `${WEB_ORIGIN}/api/sign-in/tfa`;
@@ -10,18 +15,37 @@ const BROWSER_HEADERS = {
 	"Content-Type": "application/json",
 	Origin: WEB_ORIGIN,
 	Referer: `${WEB_ORIGIN}/`,
+	"User-Agent": CLIENT_USER_AGENT,
 };
 
-const SLICER_HEADERS = {
+export const API_HEADERS = {
 	"Content-Type": "application/json",
-	"User-Agent": "bambu_network_agent/01.09.05.01",
-	"X-BBL-Client-Name": "OrcaSlicer",
-	"X-BBL-Client-Type": "slicer",
+	"User-Agent": CLIENT_USER_AGENT,
 	Accept: "application/json",
 };
 
-function apiBase(region: CloudRegion): string {
+export function apiBase(region: CloudRegion): string {
 	return region === "cn" ? "https://api.bambulab.cn" : "https://api.bambulab.com";
+}
+
+function isCloudflareBlock(res: Response): boolean {
+	return res.status === 403 && (res.headers.get("content-type") ?? "").includes("text/html");
+}
+
+export function describeHttpError(res: Response, what: string): string {
+	if (isCloudflareBlock(res)) {
+		return `Bambu Cloud (Cloudflare) bloqueó la petición al ${what} (403).`;
+	}
+	return `Error ${res.status} al ${what}.`;
+}
+
+async function readJson(res: Response, what: string): Promise<any> {
+	const text = await res.text();
+	try {
+		return JSON.parse(text);
+	} catch {
+		throw new Error(describeHttpError(res, what));
+	}
 }
 
 export interface BambuDevice {
@@ -58,10 +82,10 @@ function extractSetCookie(res: Response, name: string): string | null {
 
 export async function fetchDevices(region: CloudRegion, token: string): Promise<BambuDevice[]> {
 	const res = await fetch(`${apiBase(region)}/v1/iot-service/api/user/bind`, {
-		headers: { ...SLICER_HEADERS, Authorization: `Bearer ${token}` },
+		headers: { ...API_HEADERS, Authorization: `Bearer ${token}` },
 	});
 	if (!res.ok) {
-		throw new Error(`Error ${res.status} al obtener las impresoras.`);
+		throw new Error(describeHttpError(res, "obtener las impresoras"));
 	}
 	const data = (await res.json()) as any;
 	const rawList = Array.isArray(data.data) ? data.data : Array.isArray(data.devices) ? data.devices : [];
@@ -78,10 +102,10 @@ export async function cloudLogin(region: CloudRegion, account: string, password:
 		const cleanAccount = account.trim();
 		const res = await fetch(`${apiBase(region)}/v1/user-service/user/login`, {
 			method: "POST",
-			headers: SLICER_HEADERS,
+			headers: API_HEADERS,
 			body: JSON.stringify({ account: cleanAccount, password }),
 		});
-		const data = (await res.json()) as any;
+		const data = await readJson(res, "iniciar sesión");
 
 		if (!res.ok && !data.loginType) {
 			const errorMsg = data.message || data.error || (res.status === 400 ? "Usuario o contraseña incorrectos" : `Error HTTP ${res.status}`);
@@ -118,10 +142,10 @@ export async function cloudVerifyCode(region: CloudRegion, account: string, code
 		if (loginType === "verifyCode") {
 			const res = await fetch(`${apiBase(region)}/v1/user-service/user/login`, {
 				method: "POST",
-				headers: SLICER_HEADERS,
+				headers: API_HEADERS,
 				body: JSON.stringify({ account: cleanAccount, code: code.trim() }),
 			});
-			const data = (await res.json()) as any;
+			const data = await readJson(res, "verificar el código");
 			token = extractToken(data);
 		} else if (loginType === "tfa" && tfaKey) {
 			const csrfRes = await fetch(CSRF_URL, { headers: BROWSER_HEADERS });
@@ -142,7 +166,7 @@ export async function cloudVerifyCode(region: CloudRegion, account: string, code
 			if (tokenCookie) {
 				token = tokenCookie;
 			} else {
-				const body = (await tfaRes.json()) as any;
+				const body = await readJson(tfaRes, "verificar el código 2FA");
 				token = body.accessToken ?? body.token ?? null;
 			}
 		}

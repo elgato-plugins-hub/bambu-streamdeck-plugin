@@ -9,7 +9,7 @@ import streamDeck, {
 } from "@elgato/streamdeck";
 
 import { cloudLogin, cloudVerifyCode, fetchDevices } from "../bambu-auth";
-import { BambuCloudService } from "../bambu-cloud-service";
+import { acquirePrinter, printerKey, SharedPrinter } from "../printer-pool";
 import { ERROR_COLOR, renderPlaceholder } from "../render";
 import type { BambuTelemetry, CloudRegion } from "../types";
 
@@ -29,10 +29,9 @@ export type BaseActionSettings = {
 	accountEmail?: string;
 };
 
+/** Per-key view of a printer connection that is shared with every other key showing the same printer. */
 export interface Connection {
-	service: BambuCloudService;
-	key: string;
-	lastTelemetry: BambuTelemetry | null;
+	printer: SharedPrinter;
 	viewIndex: number;
 }
 
@@ -76,8 +75,8 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 		if (!ev.action.isKey()) return;
 		const conn = BasePrinterAction.connections.get(ev.action.id);
 		if (!conn) return;
-		void this.safeSetImage(ev.action, this.renderTelemetryImage(conn.lastTelemetry, conn), ev.action.id);
-		conn.service.requestPushAll();
+		void this.safeSetImage(ev.action, this.renderTelemetryImage(conn.printer.lastTelemetry, conn), ev.action.id);
+		conn.printer.service.requestPushAll();
 	}
 
 	override async onSendToPlugin(ev: SendToPluginEvent<any, TSettings>): Promise<void> {
@@ -165,56 +164,47 @@ export abstract class BasePrinterAction<TSettings extends BaseActionSettings = B
 			} as any);
 		}
 
-		const key = userToken && deviceSerial ? `${userToken}::${deviceSerial}::${region}` : null;
 		const existing = BasePrinterAction.connections.get(actionId);
 
-		if (!key) {
+		if (!userToken || !deviceSerial) {
 			if (existing) this.teardown(actionId);
 			const msg = !userToken ? "Sign In\nRequired" : "Select\nPrinter";
 			await this.safeSetImage(keyAction, renderPlaceholder(msg), actionId);
 			return;
 		}
 
-		if (existing?.key === key) {
-			await this.safeSetImage(keyAction, this.renderTelemetryImage(existing.lastTelemetry, existing), actionId);
+		const params = { userToken, deviceSerial, region };
+		if (existing && existing.printer.key === printerKey(params) && existing.printer.active) {
+			await this.safeSetImage(keyAction, this.renderTelemetryImage(existing.printer.lastTelemetry, existing), actionId);
 			return;
 		}
 
 		if (existing) this.teardown(actionId);
 
-		streamDeck.logger.info(`[action:${actionId}] Connecting MQTT to Bambu Cloud for serial=${deviceSerial}`);
-		const service = new BambuCloudService({
-			userToken: userToken!,
-			deviceSerial: deviceSerial!,
-			region,
-			debug: true,
+		const conn = { viewIndex: 0 } as Connection;
+		conn.printer = acquirePrinter(actionId, params, {
+			onTelemetry: (t: BambuTelemetry) => {
+				void this.safeSetImage(keyAction, this.renderTelemetryImage(t, conn), actionId);
+			},
+			onError: () => {
+				void this.safeSetImage(keyAction, renderPlaceholder("Connection\nError", ERROR_COLOR), actionId);
+				void this.safeShowAlert(keyAction, actionId);
+			},
+			onConnectFailed: (err: Error) => {
+				const msg = /cloudflare/i.test(err.message) ? "Cloud\nBlocked" : "Token\nError";
+				void this.safeSetImage(keyAction, renderPlaceholder(msg, ERROR_COLOR), actionId);
+			},
 		});
-		const conn: Connection = { service, key, lastTelemetry: null, viewIndex: 0 };
 		BasePrinterAction.connections.set(actionId, conn);
 
-		service.on("telemetry", (t: BambuTelemetry) => {
-			conn.lastTelemetry = t;
-			void this.safeSetImage(keyAction, this.renderTelemetryImage(t, conn), actionId);
-		});
-		service.on("error", (err: Error) => {
-			streamDeck.logger.error(`[action:${actionId}] MQTT Error: ${err.message}`);
-			void this.safeSetImage(keyAction, renderPlaceholder("Connection\nError", ERROR_COLOR), actionId);
-			void this.safeShowAlert(keyAction, actionId);
-		});
-
-		await this.safeSetImage(keyAction, renderPlaceholder("Connecting..."), actionId);
-		try {
-			await service.connect();
-		} catch (err) {
-			streamDeck.logger.error(`[action:${actionId}] Connect Error: ${(err as Error).message}`);
-			await this.safeSetImage(keyAction, renderPlaceholder("Token\nError", ERROR_COLOR), actionId);
-		}
+		const telemetry = conn.printer.lastTelemetry;
+		await this.safeSetImage(keyAction, telemetry ? this.renderTelemetryImage(telemetry, conn) : renderPlaceholder("Connecting..."), actionId);
 	}
 
 	protected teardown(actionId: string): void {
 		const existing = BasePrinterAction.connections.get(actionId);
 		if (!existing) return;
-		existing.service.disconnect();
+		existing.printer.removeListener(actionId);
 		BasePrinterAction.connections.delete(actionId);
 	}
 }

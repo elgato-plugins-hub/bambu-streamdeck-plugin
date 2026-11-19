@@ -10,17 +10,20 @@ import {
 	CloudRegion,
 	GcodeState,
 } from "./types";
+import { API_HEADERS, apiBase, describeHttpError } from "./bambu-auth";
 
 const BAMBU_PORT = 8883;
 const BAMBU_CLOUD_KEEPALIVE = 30;
 const AMS_TRAYS_PER_UNIT = 4;
+// The printer streams incremental reports on its own, which are merged into cumulativeTelemetry,
+// so a full "pushall" snapshot is only needed occasionally. Community docs (OpenBambuAPI) advise
+// against pushall more often than every ~5 min on P-series hardware.
+const PUSHALL_INTERVAL_MS = 5 * 60_000;
+// Minimum gap between on-demand pushalls (e.g. key presses), so mashing keys can't flood it.
+const PUSHALL_MIN_GAP_MS = 10_000;
 
 function brokerHost(region: CloudRegion): string {
 	return region === "cn" ? "cn.mqtt.bambulab.com" : "us.mqtt.bambulab.com";
-}
-
-function apiBase(region: CloudRegion): string {
-	return region === "cn" ? "https://api.bambulab.cn" : "https://api.bambulab.com";
 }
 
 function decodeJwtUserId(token: string): string | null {
@@ -37,21 +40,35 @@ function decodeJwtUserId(token: string): string | null {
 	}
 }
 
-async function fetchUserIdFromProfile(token: string, region: CloudRegion): Promise<string | null> {
+async function requestUserIdFromProfile(token: string, region: CloudRegion): Promise<string | null> {
 	const url = `${apiBase(region)}/v1/user-service/my/profile`;
 	const res = await fetch(url, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-			"User-Agent": "bambu_network_agent/01.09.05.01",
-			"X-BBL-Client-Name": "OrcaSlicer",
-			"X-BBL-Client-Type": "slicer",
-		},
+		headers: { ...API_HEADERS, Authorization: `Bearer ${token}` },
 	});
-	if (!res.ok) return null;
+	if (!res.ok) throw new Error(describeHttpError(res, "obtener el perfil de usuario"));
 	const body = (await res.json()) as { uidStr?: string; uid?: string | number };
 	const uid = body.uidStr ?? body.uid;
 	if (uid === undefined || uid === null || uid === "") return null;
 	return `u_${uid}`;
+}
+
+// Every key on the Stream Deck creates its own service; share one /my/profile lookup
+// per token so a profile load doesn't fire a burst of identical requests at Bambu Cloud.
+const userIdLookups = new Map<string, Promise<string | null>>();
+
+function fetchUserIdFromProfile(token: string, region: CloudRegion): Promise<string | null> {
+	const cacheKey = `${region}::${token}`;
+	let lookup = userIdLookups.get(cacheKey);
+	if (!lookup) {
+		lookup = requestUserIdFromProfile(token, region);
+		userIdLookups.set(cacheKey, lookup);
+		// Don't cache failures, so a later retry can succeed.
+		lookup.then(
+			(uid) => { if (!uid) userIdLookups.delete(cacheKey); },
+			() => userIdLookups.delete(cacheKey),
+		);
+	}
+	return lookup;
 }
 
 function parseGcodeState(raw: unknown): GcodeState | null {
@@ -141,6 +158,7 @@ export class BambuCloudService extends EventEmitter {
 	private client: MqttClient | null = null;
 	private pushallSeq = 0;
 	private pushallTimer: NodeJS.Timeout | null = null;
+	private lastPushAllAt = 0;
 
 	private cumulativeTelemetry: BambuTelemetry;
 
@@ -224,12 +242,12 @@ export class BambuCloudService extends EventEmitter {
 				}
 				this.log("suscrito a", topic);
 				this.emit("connected");
-				if (this.options.pushAllOnConnect) this.requestPushAll();
+				if (this.options.pushAllOnConnect) this.requestPushAll(true);
 
 				if (this.pushallTimer) clearInterval(this.pushallTimer);
 				this.pushallTimer = setInterval(() => {
-					this.requestPushAll();
-				}, 15000);
+					this.requestPushAll(true);
+				}, PUSHALL_INTERVAL_MS);
 			});
 		});
 
@@ -336,8 +354,11 @@ export class BambuCloudService extends EventEmitter {
 		});
 	}
 
-	requestPushAll(): void {
+	requestPushAll(force = false): void {
 		if (!this.client?.connected) return;
+		const now = Date.now();
+		if (!force && now - this.lastPushAllAt < PUSHALL_MIN_GAP_MS) return;
+		this.lastPushAllAt = now;
 		const topic = `device/${this.options.deviceSerial}/request`;
 		const payload = JSON.stringify({
 			pushing: {
